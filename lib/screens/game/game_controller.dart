@@ -32,6 +32,14 @@ class GameController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateScore(int value) {
+    if (score == value) {
+      return;
+    }
+    score = value;
+    notifyListeners();
+  }
+
   Future<void> _markTutorialSeen() async {
     if (showTutorial) {
       showTutorial = false;

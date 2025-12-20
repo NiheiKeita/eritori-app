@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import 'geometry.dart';
+
 class CutoutResult {
   const CutoutResult({
     required this.bytes,
@@ -12,6 +14,33 @@ class CutoutResult {
 
   final Uint8List bytes;
   final Size size;
+}
+
+double calculateCutoutArea({
+  required List<Offset> points,
+  required Offset centerPoint,
+}) {
+  if (points.length < 3) {
+    return 0;
+  }
+  final path = Path()..addPolygon(points, true);
+  final bounds = path.getBounds();
+  if (bounds.isEmpty) {
+    return 0;
+  }
+  final polygon = polygonArea(points);
+  if (path.contains(centerPoint)) {
+    return (bounds.width * bounds.height) - polygon;
+  }
+  return polygon;
+}
+
+int calculateCutoutScore({
+  required List<Offset> points,
+  required Offset centerPoint,
+}) {
+  final area = calculateCutoutArea(points: points, centerPoint: centerPoint);
+  return (area / 10).round();
 }
 
 Future<CutoutResult?> createCutout({

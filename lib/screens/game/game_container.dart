@@ -85,6 +85,15 @@ class _GameContainerState extends State<GameContainer>
       LevelProgressResult? progressResult;
       CutoutResult? cutoutResult;
       if (success) {
+        if (_lastSize != Size.zero) {
+          final bodyCenter =
+              _config.resolvedBody(_lastSize, _swayOffset).center;
+          final cutoutScore = calculateCutoutScore(
+            points: _controller.points,
+            centerPoint: bodyCenter,
+          );
+          _controller.updateScore(cutoutScore);
+        }
         progressResult = await widget.levelSelectController.recordResult(
           levelId: widget.levelId,
           score: max(_controller.score, 0),
