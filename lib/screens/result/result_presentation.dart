@@ -87,17 +87,24 @@ class ResultPresentation extends StatelessWidget {
             if (cutoutBytes != null)
               Padding(
                 padding: const EdgeInsets.only(top: 20),
-                child: Container(
-                  key: const ValueKey('result_cutout'),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Image.memory(
-                    cutoutBytes!,
-                    fit: BoxFit.contain,
-                  ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Center(
+                      child: Container(
+                        key: const ValueKey('result_cutout'),
+                        width: constraints.maxWidth * 0.5,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Image.memory(
+                          cutoutBytes!,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             if (unlockedNext)
