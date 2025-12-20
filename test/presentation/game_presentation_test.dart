@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_example_app/screens/game/game_controller.dart';
+import 'package:flutter_example_app/screens/game/game_assets.dart';
 import 'package:flutter_example_app/screens/game/game_presentation.dart';
 import 'package:flutter_example_app/screens/game/level_config.dart';
 
@@ -17,6 +18,7 @@ void main() {
           showTutorial: true,
           config: LevelConfig.forLevel(1),
           swayOffset: Offset.zero,
+          backgroundImage: defaultBackgroundImage(),
           onPanStart: (_, __) {},
           onPanUpdate: (_, __) {},
           onPanEnd: (_) {},

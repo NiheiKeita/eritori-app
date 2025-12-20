@@ -31,4 +31,24 @@ void main() {
     );
     expect(miss, isFalse);
   });
+
+  test('lineIntersectsEllipse detects intersection', () {
+    final hit = lineIntersectsEllipse(
+      const Offset(0, 0),
+      const Offset(10, 0),
+      const Offset(5, 0),
+      4,
+      2,
+    );
+    expect(hit, isTrue);
+
+    final miss = lineIntersectsEllipse(
+      const Offset(0, 0),
+      const Offset(10, 0),
+      const Offset(5, 5),
+      4,
+      2,
+    );
+    expect(miss, isFalse);
+  });
 }

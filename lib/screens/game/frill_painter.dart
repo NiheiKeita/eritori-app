@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 import 'game_controller.dart';
@@ -20,47 +18,29 @@ class FrillPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.5, size.height * 0.55) + swayOffset;
-    final faceRadius = min(size.width, size.height) * 0.16;
-    final frillRadius = min(size.width, size.height) * 0.32;
+    final body = config.resolvedBody(size, swayOffset);
+    final frill = config.resolvedFrill(size, swayOffset);
+    final shadow = config.resolvedShadow(size, swayOffset);
 
-    final facePaint = Paint()
-      ..color = const Color(0xFFF4C27E)
+    final shadowPaint = Paint()
+      ..color = Colors.black.withOpacity(0.15)
       ..style = PaintingStyle.fill;
     final frillPaint = Paint()
       ..color = const Color(0xFFFFD36C)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 16;
-    final earPaint = Paint()
-      ..color = const Color(0xFFF2B26F)
+      ..strokeWidth = frill.radius * 0.35;
+    final bodyPaint = Paint()
+      ..color = const Color(0xFFF4C27E)
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(center, frillRadius, frillPaint);
-    canvas.drawCircle(center, faceRadius, facePaint);
-
-    final earSize = Size(size.width * 0.12, size.height * 0.12);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(center.dx - faceRadius * 1.2, center.dy - faceRadius),
-          width: earSize.width,
-          height: earSize.height,
-        ),
-        const Radius.circular(6),
-      ),
-      earPaint,
+    final shadowRect = Rect.fromCenter(
+      center: shadow.center,
+      width: shadow.radiusX * 2,
+      height: shadow.radiusY * 2,
     );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(center.dx + faceRadius * 1.2, center.dy - faceRadius),
-          width: earSize.width,
-          height: earSize.height,
-        ),
-        const Radius.circular(6),
-      ),
-      earPaint,
-    );
+    canvas.drawOval(shadowRect, shadowPaint);
+    canvas.drawCircle(frill.center, frill.radius, frillPaint);
+    canvas.drawCircle(body.center, body.radius, bodyPaint);
 
     final pathPaint = Paint()
       ..color = status == GameStatus.failed
@@ -83,7 +63,7 @@ class FrillPainter extends CustomPainter {
       final highlightPaint = Paint()
         ..color = const Color(0xFF65C3A3).withOpacity(0.2)
         ..style = PaintingStyle.fill;
-      canvas.drawCircle(center, frillRadius * 0.9, highlightPaint);
+      canvas.drawCircle(frill.center, frill.radius * 0.9, highlightPaint);
     }
   }
 

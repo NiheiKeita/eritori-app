@@ -107,9 +107,7 @@ class GameController extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    if (_isClosed(size: size, config: config)) {
-      _completeSuccess(size: size, config: config);
-    } else {
+    if (status == GameStatus.drawing) {
       status = GameStatus.failed;
       notifyListeners();
     }
@@ -120,8 +118,30 @@ class GameController extends ChangeNotifier {
         pathLength < config.minPathLength(size)) {
       return false;
     }
-    final threshold = config.closeThreshold(size);
-    return (points.first - points.last).distance < threshold;
+    return _hasSelfIntersection(size: size, config: config);
+  }
+
+  bool _hasSelfIntersection({
+    required Size size,
+    required LevelConfig config,
+  }) {
+    if (points.length < 4) {
+      return false;
+    }
+    final a1 = points[points.length - 2];
+    final a2 = points.last;
+    final lastSegmentIndex = points.length - 2;
+    for (var i = 0; i < points.length - 3; i++) {
+      if (lastSegmentIndex - i < config.minIntersectionGap) {
+        continue;
+      }
+      final b1 = points[i];
+      final b2 = points[i + 1];
+      if (segmentsIntersect(a1, a2, b1, b2)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   void _completeSuccess({required Size size, required LevelConfig config}) {
@@ -144,6 +164,24 @@ class GameController extends ChangeNotifier {
     required Offset swayOffset,
   }) {
     final circles = config.resolvedCircles(size, swayOffset);
+    final body = config.resolvedBody(size, swayOffset);
+    final frill = config.resolvedFrill(size, swayOffset);
+    final shadow = config.resolvedShadow(size, swayOffset);
+    if (lineIntersectsCircle(previous, current, body.center, body.radius)) {
+      return true;
+    }
+    if (lineIntersectsCircle(previous, current, frill.center, frill.radius)) {
+      return true;
+    }
+    if (lineIntersectsEllipse(
+      previous,
+      current,
+      shadow.center,
+      shadow.radiusX,
+      shadow.radiusY,
+    )) {
+      return true;
+    }
     for (final circle in circles) {
       if (lineIntersectsCircle(previous, current, circle.center, circle.radius)) {
         return true;

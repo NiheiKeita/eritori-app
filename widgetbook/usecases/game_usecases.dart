@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:widgetbook/widgetbook.dart';
 
 import 'package:flutter_example_app/screens/game/game_controller.dart';
+import 'package:flutter_example_app/screens/game/game_assets.dart';
 import 'package:flutter_example_app/screens/game/game_presentation.dart';
 import 'package:flutter_example_app/screens/game/level_config.dart';
 
@@ -23,6 +24,7 @@ WidgetbookComponent gameUsecases() {
           showTutorial: true,
           config: LevelConfig.forLevel(1),
           swayOffset: Offset.zero,
+          backgroundImage: defaultBackgroundImage(),
           onPanStart: (_, __) {},
           onPanUpdate: (_, __) {},
           onPanEnd: (_) {},
@@ -42,6 +44,7 @@ WidgetbookComponent gameUsecases() {
           showTutorial: false,
           config: LevelConfig.forLevel(1),
           swayOffset: Offset.zero,
+          backgroundImage: defaultBackgroundImage(),
           onPanStart: (_, __) {},
           onPanUpdate: (_, __) {},
           onPanEnd: (_) {},
@@ -64,6 +67,7 @@ WidgetbookComponent gameUsecases() {
           showTutorial: false,
           config: LevelConfig.forLevel(1),
           swayOffset: Offset.zero,
+          backgroundImage: defaultBackgroundImage(),
           onPanStart: (_, __) {},
           onPanUpdate: (_, __) {},
           onPanEnd: (_) {},

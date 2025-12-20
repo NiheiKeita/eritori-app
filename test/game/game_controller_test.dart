@@ -33,36 +33,36 @@ void main() {
   test('close detection sets success', () {
     final size = const Size(200, 400);
     controller.onPanStart(
-      position: const Offset(50, 200),
+      position: const Offset(20, 340),
       size: size,
       config: LevelConfig.forLevel(1),
     );
     controller.onPanUpdate(
-      position: const Offset(150, 200),
-      size: size,
-      config: LevelConfig.forLevel(1),
-      swayOffset: Offset.zero,
-    );
-    controller.onPanUpdate(
-      position: const Offset(160, 260),
+      position: const Offset(180, 380),
       size: size,
       config: LevelConfig.forLevel(1),
       swayOffset: Offset.zero,
     );
     controller.onPanUpdate(
-      position: const Offset(140, 320),
+      position: const Offset(20, 380),
       size: size,
       config: LevelConfig.forLevel(1),
       swayOffset: Offset.zero,
     );
     controller.onPanUpdate(
-      position: const Offset(60, 320),
+      position: const Offset(180, 340),
       size: size,
       config: LevelConfig.forLevel(1),
       swayOffset: Offset.zero,
     );
     controller.onPanUpdate(
-      position: const Offset(52, 202),
+      position: const Offset(40, 350),
+      size: size,
+      config: LevelConfig.forLevel(1),
+      swayOffset: Offset.zero,
+    );
+    controller.onPanUpdate(
+      position: const Offset(160, 360),
       size: size,
       config: LevelConfig.forLevel(1),
       swayOffset: Offset.zero,
@@ -74,12 +74,12 @@ void main() {
   test('ng area contact fails immediately', () {
     final size = const Size(200, 400);
     controller.onPanStart(
-      position: const Offset(40, 120),
+      position: const Offset(40, 210),
       size: size,
       config: LevelConfig.forLevel(1),
     );
     controller.onPanUpdate(
-      position: const Offset(120, 140),
+      position: const Offset(140, 220),
       size: size,
       config: LevelConfig.forLevel(1),
       swayOffset: Offset.zero,
@@ -90,36 +90,36 @@ void main() {
   test('success calculates score', () {
     final size = const Size(200, 400);
     controller.onPanStart(
-      position: const Offset(30, 250),
+      position: const Offset(30, 330),
       size: size,
       config: LevelConfig.forLevel(1),
     );
     controller.onPanUpdate(
-      position: const Offset(170, 250),
-      size: size,
-      config: LevelConfig.forLevel(1),
-      swayOffset: Offset.zero,
-    );
-    controller.onPanUpdate(
-      position: const Offset(170, 320),
+      position: const Offset(170, 370),
       size: size,
       config: LevelConfig.forLevel(1),
       swayOffset: Offset.zero,
     );
     controller.onPanUpdate(
-      position: const Offset(100, 340),
+      position: const Offset(30, 370),
       size: size,
       config: LevelConfig.forLevel(1),
       swayOffset: Offset.zero,
     );
     controller.onPanUpdate(
-      position: const Offset(30, 320),
+      position: const Offset(170, 330),
       size: size,
       config: LevelConfig.forLevel(1),
       swayOffset: Offset.zero,
     );
     controller.onPanUpdate(
-      position: const Offset(30, 250),
+      position: const Offset(60, 340),
+      size: size,
+      config: LevelConfig.forLevel(1),
+      swayOffset: Offset.zero,
+    );
+    controller.onPanUpdate(
+      position: const Offset(140, 350),
       size: size,
       config: LevelConfig.forLevel(1),
       swayOffset: Offset.zero,

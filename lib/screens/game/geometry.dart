@@ -36,6 +36,28 @@ bool lineIntersectsCircle(
   return (center - closest).distance <= radius;
 }
 
+bool lineIntersectsEllipse(
+  Offset a,
+  Offset b,
+  Offset center,
+  double radiusX,
+  double radiusY,
+) {
+  if (radiusX == 0 || radiusY == 0) {
+    return false;
+  }
+  Offset normalize(Offset p) {
+    return Offset(
+      (p.dx - center.dx) / radiusX,
+      (p.dy - center.dy) / radiusY,
+    );
+  }
+
+  final na = normalize(a);
+  final nb = normalize(b);
+  return lineIntersectsCircle(na, nb, Offset.zero, 1);
+}
+
 bool lineIntersectsRect(Offset a, Offset b, Rect rect) {
   if (rect.contains(a) || rect.contains(b)) {
     return true;
@@ -46,13 +68,13 @@ bool lineIntersectsRect(Offset a, Offset b, Rect rect) {
   final bottomLeft = rect.bottomLeft;
   final bottomRight = rect.bottomRight;
 
-  return _segmentsIntersect(a, b, topLeft, topRight) ||
-      _segmentsIntersect(a, b, topRight, bottomRight) ||
-      _segmentsIntersect(a, b, bottomRight, bottomLeft) ||
-      _segmentsIntersect(a, b, bottomLeft, topLeft);
+  return segmentsIntersect(a, b, topLeft, topRight) ||
+      segmentsIntersect(a, b, topRight, bottomRight) ||
+      segmentsIntersect(a, b, bottomRight, bottomLeft) ||
+      segmentsIntersect(a, b, bottomLeft, topLeft);
 }
 
-bool _segmentsIntersect(Offset p1, Offset p2, Offset p3, Offset p4) {
+bool segmentsIntersect(Offset p1, Offset p2, Offset p3, Offset p4) {
   double cross(Offset a, Offset b, Offset c) {
     return (b.dx - a.dx) * (c.dy - a.dy) - (b.dy - a.dy) * (c.dx - a.dx);
   }

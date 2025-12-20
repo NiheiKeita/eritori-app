@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../storage/prefs_repository.dart';
 import '../level_select/level_select_controller.dart';
 import '../result/result_controller.dart';
+import 'game_assets.dart';
 import 'game_controller.dart';
 import 'game_presentation.dart';
 import 'level_config.dart';
@@ -124,6 +125,7 @@ class _GameContainerState extends State<GameContainer>
             showTutorial: _controller.showTutorial,
             config: _config,
             swayOffset: _swayOffset,
+            backgroundImage: defaultBackgroundImage(),
             onPanStart: (position, size) {
               _lastSize = size;
               _controller.onPanStart(

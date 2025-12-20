@@ -14,6 +14,7 @@ class GamePresentation extends StatelessWidget {
     required this.showTutorial,
     required this.config,
     required this.swayOffset,
+    required this.backgroundImage,
     required this.onPanStart,
     required this.onPanUpdate,
     required this.onPanEnd,
@@ -27,6 +28,7 @@ class GamePresentation extends StatelessWidget {
   final bool showTutorial;
   final LevelConfig config;
   final Offset swayOffset;
+  final ImageProvider backgroundImage;
   final void Function(Offset position, Size size) onPanStart;
   final void Function(Offset position, Size size) onPanUpdate;
   final void Function(Size size) onPanEnd;
@@ -72,6 +74,12 @@ class GamePresentation extends StatelessWidget {
                   onPanEnd: (_) => onPanEnd(size),
                   child: Stack(
                     children: [
+                      Positioned.fill(
+                        child: Image(
+                          image: backgroundImage,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                       Positioned.fill(
                         child: CustomPaint(
                           painter: FrillPainter(
