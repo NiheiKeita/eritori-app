@@ -19,6 +19,7 @@ void main() {
           config: LevelConfig.forLevel(1),
           swayOffset: Offset.zero,
           backgroundImage: defaultBackgroundImage(),
+          frillImage: defaultBackgroundImage(),
           onPanStart: (_, __) {},
           onPanUpdate: (_, __) {},
           onPanEnd: (_) {},

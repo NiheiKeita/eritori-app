@@ -7,6 +7,7 @@ import '../../storage/prefs_repository.dart';
 import '../level_select/level_select_controller.dart';
 import '../result/result_controller.dart';
 import 'game_assets.dart';
+import 'cutout.dart';
 import 'game_controller.dart';
 import 'game_presentation.dart';
 import 'level_config.dart';
@@ -31,6 +32,7 @@ class _GameContainerState extends State<GameContainer>
     with SingleTickerProviderStateMixin {
   late final GameController _controller;
   late final AnimationController _swayController;
+  final ImageProvider _backgroundImage = defaultBackgroundImage();
   bool _hasNavigated = false;
   Offset _swayOffset = Offset.zero;
   Size _lastSize = Size.zero;
@@ -81,12 +83,27 @@ class _GameContainerState extends State<GameContainer>
       _hasNavigated = true;
       final success = _controller.status == GameStatus.success;
       LevelProgressResult? progressResult;
+      CutoutResult? cutoutResult;
       if (success) {
         progressResult = await widget.levelSelectController.recordResult(
           levelId: widget.levelId,
           score: max(_controller.score, 0),
           success: true,
         );
+        if (_lastSize != Size.zero) {
+          final bodyCenter =
+              _config.resolvedBody(_lastSize, _swayOffset).center;
+          try {
+            cutoutResult = await createCutout(
+              background: _backgroundImage,
+              size: _lastSize,
+              points: _controller.points,
+              centerPoint: bodyCenter,
+            ).timeout(const Duration(milliseconds: 400));
+          } catch (_) {
+            cutoutResult = null;
+          }
+        }
       }
       if (!mounted) {
         return;
@@ -101,6 +118,7 @@ class _GameContainerState extends State<GameContainer>
           unlockedNext: progressResult?.unlockedNext ?? false,
           unlockedLevel: progressResult?.unlockedLevel ??
               widget.levelSelectController.unlockedLevel,
+          cutoutBytes: cutoutResult?.bytes,
         ),
       );
     }
@@ -125,7 +143,8 @@ class _GameContainerState extends State<GameContainer>
             showTutorial: _controller.showTutorial,
             config: _config,
             swayOffset: _swayOffset,
-            backgroundImage: defaultBackgroundImage(),
+            backgroundImage: _backgroundImage,
+            frillImage: _backgroundImage,
             onPanStart: (position, size) {
               _lastSize = size;
               _controller.onPanStart(

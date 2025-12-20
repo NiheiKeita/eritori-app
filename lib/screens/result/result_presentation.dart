@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 class ResultPresentation extends StatelessWidget {
@@ -9,6 +11,7 @@ class ResultPresentation extends StatelessWidget {
     required this.bestUpdated,
     required this.unlockedNext,
     required this.unlockedLevel,
+    required this.cutoutBytes,
     required this.onRetry,
     required this.onSelectLevel,
   });
@@ -19,6 +22,7 @@ class ResultPresentation extends StatelessWidget {
   final bool bestUpdated;
   final bool unlockedNext;
   final int unlockedLevel;
+  final Uint8List? cutoutBytes;
   final VoidCallback onRetry;
   final VoidCallback onSelectLevel;
 
@@ -80,6 +84,22 @@ class ResultPresentation extends StatelessWidget {
                 ],
               ),
             ),
+            if (cutoutBytes != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Container(
+                  key: const ValueKey('result_cutout'),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Image.memory(
+                    cutoutBytes!,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
             if (unlockedNext)
               Padding(
                 padding: const EdgeInsets.only(top: 20),

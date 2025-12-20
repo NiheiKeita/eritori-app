@@ -24,6 +24,7 @@ class ResultContainer extends StatelessWidget {
             bestUpdated: controller.data.bestUpdated,
             unlockedNext: controller.data.unlockedNext,
             unlockedLevel: controller.data.unlockedLevel,
+            cutoutBytes: controller.data.cutoutBytes,
             onRetry: () => context.go('/game/${controller.data.levelId}'),
             onSelectLevel: () => context.go('/level-select'),
           );

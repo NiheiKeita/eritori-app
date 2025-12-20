@@ -60,6 +60,7 @@ class AppRouter {
                     bestUpdated: false,
                     unlockedNext: false,
                     unlockedLevel: 1,
+                    cutoutBytes: null,
                   ),
             );
           },

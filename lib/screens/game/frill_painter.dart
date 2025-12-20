@@ -25,10 +25,6 @@ class FrillPainter extends CustomPainter {
     final shadowPaint = Paint()
       ..color = Colors.black.withOpacity(0.15)
       ..style = PaintingStyle.fill;
-    final frillPaint = Paint()
-      ..color = const Color(0xFFFFD36C)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = frill.radius * 0.35;
     final bodyPaint = Paint()
       ..color = const Color(0xFFF4C27E)
       ..style = PaintingStyle.fill;
@@ -39,7 +35,6 @@ class FrillPainter extends CustomPainter {
       height: shadow.radiusY * 2,
     );
     canvas.drawOval(shadowRect, shadowPaint);
-    canvas.drawCircle(frill.center, frill.radius, frillPaint);
     canvas.drawCircle(body.center, body.radius, bodyPaint);
 
     final pathPaint = Paint()

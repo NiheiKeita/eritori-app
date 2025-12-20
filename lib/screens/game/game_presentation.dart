@@ -15,6 +15,7 @@ class GamePresentation extends StatelessWidget {
     required this.config,
     required this.swayOffset,
     required this.backgroundImage,
+    required this.frillImage,
     required this.onPanStart,
     required this.onPanUpdate,
     required this.onPanEnd,
@@ -29,6 +30,7 @@ class GamePresentation extends StatelessWidget {
   final LevelConfig config;
   final Offset swayOffset;
   final ImageProvider backgroundImage;
+  final ImageProvider frillImage;
   final void Function(Offset position, Size size) onPanStart;
   final void Function(Offset position, Size size) onPanUpdate;
   final void Function(Size size) onPanEnd;
@@ -79,6 +81,12 @@ class GamePresentation extends StatelessWidget {
                           image: backgroundImage,
                           fit: BoxFit.cover,
                         ),
+                      ),
+                      _FrillImageLayer(
+                        frillImage: frillImage,
+                        config: config,
+                        swayOffset: swayOffset,
+                        size: size,
                       ),
                       Positioned.fill(
                         child: CustomPaint(
@@ -189,6 +197,39 @@ class _ResultOverlay extends StatelessWidget {
             color: Colors.white,
             letterSpacing: 1.2,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FrillImageLayer extends StatelessWidget {
+  const _FrillImageLayer({
+    required this.frillImage,
+    required this.config,
+    required this.swayOffset,
+    required this.size,
+  });
+
+  final ImageProvider frillImage;
+  final LevelConfig config;
+  final Offset swayOffset;
+  final Size size;
+
+  @override
+  Widget build(BuildContext context) {
+    final frill = config.resolvedFrill(size, swayOffset);
+    final rect = Rect.fromCenter(
+      center: frill.center,
+      width: frill.radius * 2,
+      height: frill.radius * 2,
+    );
+    return Positioned.fromRect(
+      rect: rect,
+      child: ClipOval(
+        child: Image(
+          image: frillImage,
+          fit: BoxFit.cover,
         ),
       ),
     );
