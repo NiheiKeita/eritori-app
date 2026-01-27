@@ -92,6 +92,7 @@ class _GameContainerState extends State<GameContainer>
           final cutoutScore = calculateCutoutScore(
             points: _controller.points,
             centerPoint: bodyCenter,
+            size: _lastSize,
           );
           _controller.updateScore(cutoutScore);
         }

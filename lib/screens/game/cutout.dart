@@ -19,6 +19,7 @@ class CutoutResult {
 double calculateCutoutArea({
   required List<Offset> points,
   required Offset centerPoint,
+  required Size size,
 }) {
   if (points.length < 3) {
     return 0;
@@ -30,7 +31,7 @@ double calculateCutoutArea({
   }
   final polygon = polygonArea(points);
   if (path.contains(centerPoint)) {
-    return (bounds.width * bounds.height) - polygon;
+    return (size.width * size.height) - polygon;
   }
   return polygon;
 }
@@ -38,8 +39,10 @@ double calculateCutoutArea({
 int calculateCutoutScore({
   required List<Offset> points,
   required Offset centerPoint,
+  required Size size,
 }) {
-  final area = calculateCutoutArea(points: points, centerPoint: centerPoint);
+  final area =
+      calculateCutoutArea(points: points, centerPoint: centerPoint, size: size);
   return (area / 10).round();
 }
 
@@ -57,11 +60,17 @@ Future<CutoutResult?> createCutout({
   if (bounds.isEmpty) {
     return null;
   }
+  final isCenterInside = path.contains(centerPoint);
+  final outputRect = isCenterInside
+      ? Rect.fromLTWH(0, 0, size.width, size.height)
+      : bounds;
 
   final image = await _loadImage(background);
   final recorder = ui.PictureRecorder();
-  final canvas = Canvas(recorder, Offset.zero & bounds.size);
-  canvas.translate(-bounds.left, -bounds.top);
+  final canvas = Canvas(recorder, Offset.zero & outputRect.size);
+  if (!isCenterInside) {
+    canvas.translate(-bounds.left, -bounds.top);
+  }
 
   final boxFit = applyBoxFit(BoxFit.cover, Size(image.width.toDouble(),
       image.height.toDouble()), size);
@@ -76,12 +85,11 @@ Future<CutoutResult?> createCutout({
     Rect.fromLTWH(0, 0, size.width, size.height),
   );
 
-  final isCenterInside = path.contains(centerPoint);
   final clipPath = Path();
   if (isCenterInside) {
     clipPath
       ..fillType = PathFillType.evenOdd
-      ..addRect(bounds)
+      ..addRect(outputRect)
       ..addPath(path, Offset.zero);
   } else {
     clipPath.addPath(path, Offset.zero);
@@ -99,8 +107,8 @@ Future<CutoutResult?> createCutout({
 
   final picture = recorder.endRecording();
   final outputImage = await picture.toImage(
-    bounds.width.ceil(),
-    bounds.height.ceil(),
+    outputRect.width.ceil(),
+    outputRect.height.ceil(),
   );
   final byteData = await outputImage.toByteData(
     format: ui.ImageByteFormat.png,
@@ -110,7 +118,7 @@ Future<CutoutResult?> createCutout({
   }
   return CutoutResult(
     bytes: byteData.buffer.asUint8List(),
-    size: bounds.size,
+    size: outputRect.size,
   );
 }
 
