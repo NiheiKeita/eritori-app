@@ -9,6 +9,7 @@ import 'screens/level_select/level_select_container.dart';
 import 'screens/result/result_container.dart';
 import 'screens/result/result_controller.dart';
 import 'screens/settings/settings_container.dart';
+import 'screens/trace_cutout/trace_cutout_screen.dart';
 import 'widgets/bottom_nav_presentation.dart';
 
 class AppRouter {
@@ -86,6 +87,10 @@ class AppRouter {
               onNavSelected: (item) => _onNavSelected(context, item),
             );
           },
+        ),
+        GoRoute(
+          path: '/trace-cutout',
+          builder: (context, state) => const TraceCutoutScreen(),
         ),
       ],
     );

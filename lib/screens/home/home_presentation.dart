@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
 class HomePresentation extends StatelessWidget {
-  const HomePresentation({super.key, required this.onPlay});
+  const HomePresentation({
+    super.key,
+    required this.onPlay,
+    required this.onTraceCutout,
+  });
 
   final VoidCallback onPlay;
+  final VoidCallback onTraceCutout;
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +57,17 @@ class HomePresentation extends StatelessWidget {
                       ),
                     ),
                     child: const Text('Play'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: onTraceCutout,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
+                    child: const Text('なぞって切り抜き'),
                   ),
                 ],
               ),

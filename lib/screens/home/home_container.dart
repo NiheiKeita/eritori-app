@@ -18,6 +18,7 @@ class HomeContainer extends StatelessWidget {
       backgroundColor: const Color(0xFFF7F3E8),
       body: HomePresentation(
         onPlay: () => context.go('/level-select'),
+        onTraceCutout: () => context.go('/trace-cutout'),
       ),
       bottomNavigationBar: BottomNavPresentation(
         current: BottomNavItem.home,
