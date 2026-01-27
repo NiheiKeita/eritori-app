@@ -15,7 +15,7 @@ class GamePresentation extends StatelessWidget {
     required this.config,
     required this.swayOffset,
     required this.backgroundImage,
-    required this.frillImage,
+    required this.faceImage,
     required this.onPanStart,
     required this.onPanUpdate,
     required this.onPanEnd,
@@ -30,7 +30,7 @@ class GamePresentation extends StatelessWidget {
   final LevelConfig config;
   final Offset swayOffset;
   final ImageProvider backgroundImage;
-  final ImageProvider frillImage;
+  final ImageProvider faceImage;
   final void Function(Offset position, Size size) onPanStart;
   final void Function(Offset position, Size size) onPanUpdate;
   final void Function(Size size) onPanEnd;
@@ -82,8 +82,8 @@ class GamePresentation extends StatelessWidget {
                           fit: BoxFit.cover,
                         ),
                       ),
-                      _FrillImageLayer(
-                        frillImage: frillImage,
+                      _FaceImageLayer(
+                        faceImage: faceImage,
                         config: config,
                         swayOffset: swayOffset,
                         size: size,
@@ -203,32 +203,32 @@ class _ResultOverlay extends StatelessWidget {
   }
 }
 
-class _FrillImageLayer extends StatelessWidget {
-  const _FrillImageLayer({
-    required this.frillImage,
+class _FaceImageLayer extends StatelessWidget {
+  const _FaceImageLayer({
+    required this.faceImage,
     required this.config,
     required this.swayOffset,
     required this.size,
   });
 
-  final ImageProvider frillImage;
+  final ImageProvider faceImage;
   final LevelConfig config;
   final Offset swayOffset;
   final Size size;
 
   @override
   Widget build(BuildContext context) {
-    final frill = config.resolvedFrill(size, swayOffset);
+    final face = config.resolvedBody(size, swayOffset);
     final rect = Rect.fromCenter(
-      center: frill.center,
-      width: frill.radius * 2,
-      height: frill.radius * 2,
+      center: face.center,
+      width: face.radius * 2,
+      height: face.radius * 2,
     );
     return Positioned.fromRect(
       rect: rect,
       child: ClipOval(
         child: Image(
-          image: frillImage,
+          image: faceImage,
           fit: BoxFit.cover,
         ),
       ),

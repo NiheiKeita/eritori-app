@@ -33,6 +33,7 @@ class _GameContainerState extends State<GameContainer>
   late final GameController _controller;
   late final AnimationController _swayController;
   final ImageProvider _backgroundImage = defaultBackgroundImage();
+  final ImageProvider _faceImage = defaultFaceImage();
   bool _hasNavigated = false;
   Offset _swayOffset = Offset.zero;
   Size _lastSize = Size.zero;
@@ -153,7 +154,7 @@ class _GameContainerState extends State<GameContainer>
             config: _config,
             swayOffset: _swayOffset,
             backgroundImage: _backgroundImage,
-            frillImage: _backgroundImage,
+            faceImage: _faceImage,
             onPanStart: (position, size) {
               _lastSize = size;
               _controller.onPanStart(

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'game_controller.dart';
@@ -18,24 +20,6 @@ class FrillPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final body = config.resolvedBody(size, swayOffset);
-    final frill = config.resolvedFrill(size, swayOffset);
-    final shadow = config.resolvedShadow(size, swayOffset);
-
-    final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.15)
-      ..style = PaintingStyle.fill;
-    final bodyPaint = Paint()
-      ..color = const Color(0xFFF4C27E)
-      ..style = PaintingStyle.fill;
-
-    final shadowRect = Rect.fromCenter(
-      center: shadow.center,
-      width: shadow.radiusX * 2,
-      height: shadow.radiusY * 2,
-    );
-    canvas.drawOval(shadowRect, shadowPaint);
-    canvas.drawCircle(body.center, body.radius, bodyPaint);
 
     final pathPaint = Paint()
       ..color = status == GameStatus.failed
@@ -58,7 +42,11 @@ class FrillPainter extends CustomPainter {
       final highlightPaint = Paint()
         ..color = const Color(0xFF65C3A3).withOpacity(0.2)
         ..style = PaintingStyle.fill;
-      canvas.drawCircle(frill.center, frill.radius * 0.9, highlightPaint);
+      canvas.drawCircle(
+        Offset(size.width * 0.5, size.height * 0.5),
+        min(size.width, size.height) * 0.18,
+        highlightPaint,
+      );
     }
   }
 

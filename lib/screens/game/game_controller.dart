@@ -6,6 +6,16 @@ import 'level_config.dart';
 
 enum GameStatus { idle, drawing, success, failed }
 
+class IntersectionResult {
+  const IntersectionResult({
+    required this.point,
+    required this.segmentIndex,
+  });
+
+  final Offset point;
+  final int segmentIndex;
+}
+
 class GameController extends ChangeNotifier {
   GameController({
     required PrefsRepository prefsRepository,
@@ -94,7 +104,16 @@ class GameController extends ChangeNotifier {
       return;
     }
 
-    if (_isClosed(size: size, config: config)) {
+    IntersectionResult? intersection;
+    if (points.length >= config.minPoints &&
+        pathLength >= config.minPathLength(size)) {
+      intersection = _findSelfIntersection(config: config);
+    }
+    if (intersection != null) {
+      points = <Offset>[
+        intersection.point,
+        ...points.sublist(intersection.segmentIndex + 1),
+      ];
       _completeSuccess(size: size, config: config);
     } else {
       notifyListeners();
@@ -121,20 +140,11 @@ class GameController extends ChangeNotifier {
     }
   }
 
-  bool _isClosed({required Size size, required LevelConfig config}) {
-    if (points.length < config.minPoints ||
-        pathLength < config.minPathLength(size)) {
-      return false;
-    }
-    return _hasSelfIntersection(size: size, config: config);
-  }
-
-  bool _hasSelfIntersection({
-    required Size size,
+  IntersectionResult? _findSelfIntersection({
     required LevelConfig config,
   }) {
     if (points.length < 4) {
-      return false;
+      return null;
     }
     final a1 = points[points.length - 2];
     final a2 = points.last;
@@ -145,11 +155,12 @@ class GameController extends ChangeNotifier {
       }
       final b1 = points[i];
       final b2 = points[i + 1];
-      if (segmentsIntersect(a1, a2, b1, b2)) {
-        return true;
+      final intersectionPoint = segmentIntersectionPoint(a1, a2, b1, b2);
+      if (intersectionPoint != null) {
+        return IntersectionResult(point: intersectionPoint, segmentIndex: i);
       }
     }
-    return false;
+    return null;
   }
 
   void _completeSuccess({required Size size, required LevelConfig config}) {
@@ -173,21 +184,7 @@ class GameController extends ChangeNotifier {
   }) {
     final circles = config.resolvedCircles(size, swayOffset);
     final body = config.resolvedBody(size, swayOffset);
-    final frill = config.resolvedFrill(size, swayOffset);
-    final shadow = config.resolvedShadow(size, swayOffset);
     if (lineIntersectsCircle(previous, current, body.center, body.radius)) {
-      return true;
-    }
-    if (lineIntersectsCircle(previous, current, frill.center, frill.radius)) {
-      return true;
-    }
-    if (lineIntersectsEllipse(
-      previous,
-      current,
-      shadow.center,
-      shadow.radiusX,
-      shadow.radiusY,
-    )) {
       return true;
     }
     for (final circle in circles) {

@@ -111,3 +111,19 @@ bool segmentsIntersect(Offset p1, Offset p2, Offset p3, Offset p4) {
 
   return false;
 }
+
+Offset? segmentIntersectionPoint(Offset a, Offset b, Offset c, Offset d) {
+  final r = b - a;
+  final s = d - c;
+  final rxs = r.dx * s.dy - r.dy * s.dx;
+  if (rxs == 0) {
+    return null;
+  }
+  final cma = c - a;
+  final t = (cma.dx * s.dy - cma.dy * s.dx) / rxs;
+  final u = (cma.dx * r.dy - cma.dy * r.dx) / rxs;
+  if (t < 0 || t > 1 || u < 0 || u > 1) {
+    return null;
+  }
+  return a + r * t;
+}
