@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../storage/prefs_repository.dart';
@@ -34,6 +38,8 @@ class _GameContainerState extends State<GameContainer>
   late final AnimationController _swayController;
   final ImageProvider _backgroundImage = defaultBackgroundImage();
   final ImageProvider _faceImage = defaultFaceImage();
+  ui.Image? _faceUiImage;
+  Uint8List? _faceRgba;
   bool _hasNavigated = false;
   Offset _swayOffset = Offset.zero;
   Size _lastSize = Size.zero;
@@ -47,6 +53,7 @@ class _GameContainerState extends State<GameContainer>
       ..addListener(_onControllerChanged)
       ..loadTutorialState();
     _controller.start();
+    _loadFaceImage();
     _swayController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -62,7 +69,80 @@ class _GameContainerState extends State<GameContainer>
       ..removeListener(_onControllerChanged)
       ..dispose();
     _swayController.dispose();
+    _faceUiImage?.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadFaceImage() async {
+    final data = await rootBundle.load(faceImageAsset);
+    final bytes = data.buffer.asUint8List();
+    final completer = Completer<ui.Image>();
+    ui.decodeImageFromList(bytes, completer.complete);
+    final image = await completer.future;
+    final byteData =
+        await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (!mounted) {
+      image.dispose();
+      return;
+    }
+    setState(() {
+      _faceUiImage = image;
+      _faceRgba = byteData?.buffer.asUint8List();
+    });
+  }
+
+  bool _isFaceOpaque(
+    Offset point,
+    Size size,
+    Offset swayOffset,
+  ) {
+    final image = _faceUiImage;
+    final bytes = _faceRgba;
+    if (image == null || bytes == null) {
+      return false;
+    }
+    final face = _config.resolvedBody(size, swayOffset);
+    final rect = Rect.fromCenter(
+      center: face.center,
+      width: face.radius * 2,
+      height: face.radius * 2,
+    );
+    if (!rect.contains(point)) {
+      return false;
+    }
+    if ((point - face.center).distance > face.radius) {
+      return false;
+    }
+
+    final imageSize = Size(image.width.toDouble(), image.height.toDouble());
+    final fitted = applyBoxFit(BoxFit.cover, imageSize, rect.size);
+    final inputSubrect = Alignment.center.inscribe(
+      fitted.source,
+      Offset.zero & imageSize,
+    );
+    final outputSubrect = Alignment.center.inscribe(
+      fitted.destination,
+      Offset.zero & rect.size,
+    );
+    final local = point - rect.topLeft;
+    if (!outputSubrect.contains(local)) {
+      return false;
+    }
+
+    final normX =
+        (local.dx - outputSubrect.left) / outputSubrect.width.clamp(1, double.infinity);
+    final normY =
+        (local.dy - outputSubrect.top) / outputSubrect.height.clamp(1, double.infinity);
+    final sourceX = inputSubrect.left + normX * inputSubrect.width;
+    final sourceY = inputSubrect.top + normY * inputSubrect.height;
+
+    final px = sourceX.clamp(0, image.width - 1).floor();
+    final py = sourceY.clamp(0, image.height - 1).floor();
+    final index = (py * image.width + px) * 4 + 3;
+    if (index < 0 || index >= bytes.length) {
+      return false;
+    }
+    return bytes[index] > 0;
   }
 
   void _updateSway() {
@@ -171,6 +251,7 @@ class _GameContainerState extends State<GameContainer>
                 size: size,
                 config: _config,
                 swayOffset: _swayOffset,
+                faceHitTester: _faceRgba == null ? null : _isFaceOpaque,
               );
             },
             onPanEnd: (size) {

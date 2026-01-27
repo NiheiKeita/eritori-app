@@ -79,6 +79,7 @@ class GameController extends ChangeNotifier {
     required Size size,
     required LevelConfig config,
     required Offset swayOffset,
+    bool Function(Offset point, Size size, Offset swayOffset)? faceHitTester,
   }) {
     if (status != GameStatus.drawing) {
       return;
@@ -98,6 +99,7 @@ class GameController extends ChangeNotifier {
       size: size,
       config: config,
       swayOffset: swayOffset,
+      faceHitTester: faceHitTester,
     )) {
       status = GameStatus.failed;
       notifyListeners();
@@ -181,10 +183,21 @@ class GameController extends ChangeNotifier {
     required Size size,
     required LevelConfig config,
     required Offset swayOffset,
+    bool Function(Offset point, Size size, Offset swayOffset)? faceHitTester,
   }) {
     final circles = config.resolvedCircles(size, swayOffset);
     final body = config.resolvedBody(size, swayOffset);
-    if (lineIntersectsCircle(previous, current, body.center, body.radius)) {
+    if (faceHitTester != null) {
+      if (_lineHitsFace(
+        previous: previous,
+        current: current,
+        size: size,
+        swayOffset: swayOffset,
+        faceHitTester: faceHitTester,
+      )) {
+        return true;
+      }
+    } else if (lineIntersectsCircle(previous, current, body.center, body.radius)) {
       return true;
     }
     for (final circle in circles) {
@@ -195,6 +208,33 @@ class GameController extends ChangeNotifier {
     final rects = config.resolvedRects(size, swayOffset);
     for (final rect in rects) {
       if (lineIntersectsRect(previous, current, rect)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool _lineHitsFace({
+    required Offset previous,
+    required Offset current,
+    required Size size,
+    required Offset swayOffset,
+    required bool Function(Offset point, Size size, Offset swayOffset)
+        faceHitTester,
+  }) {
+    final distance = (current - previous).distance;
+    if (distance == 0) {
+      return faceHitTester(current, size, swayOffset);
+    }
+    final step = 4.0;
+    final steps = (distance / step).ceil();
+    for (var i = 0; i <= steps; i++) {
+      final t = i / steps;
+      final point = Offset(
+        previous.dx + (current.dx - previous.dx) * t,
+        previous.dy + (current.dy - previous.dy) * t,
+      );
+      if (faceHitTester(point, size, swayOffset)) {
         return true;
       }
     }
