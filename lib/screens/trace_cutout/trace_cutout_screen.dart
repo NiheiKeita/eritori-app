@@ -33,7 +33,7 @@ class _TraceCutoutScreenState extends State<TraceCutoutScreen> {
   }
 
   Future<void> _loadImage() async {
-    final data = await rootBundle.load('assets/images/tree.jpeg');
+    final data = await rootBundle.load('assets/images/eri.png');
     final bytes = data.buffer.asUint8List();
     final completer = Completer<ui.Image>();
     ui.decodeImageFromList(bytes, completer.complete);
@@ -53,7 +53,7 @@ class _TraceCutoutScreenState extends State<TraceCutoutScreen> {
       return null;
     }
     final imageSize = Size(image.width.toDouble(), image.height.toDouble());
-    final fitted = applyBoxFit(BoxFit.contain, imageSize, canvasSize);
+    final fitted = applyBoxFit(BoxFit.fitWidth, imageSize, canvasSize);
     final destination = fitted.destination;
     final dx = (canvasSize.width - destination.width) / 2;
     final dy = (canvasSize.height - destination.height) / 2;
@@ -312,7 +312,7 @@ class TraceCutoutPainter extends CustomPainter {
     }
 
     final imageSize = Size(image.width.toDouble(), image.height.toDouble());
-    final fitted = applyBoxFit(BoxFit.contain, imageSize, size);
+    final fitted = applyBoxFit(BoxFit.fitWidth, imageSize, size);
     final destination = fitted.destination;
     final dx = (size.width - destination.width) / 2;
     final dy = (size.height - destination.height) / 2;

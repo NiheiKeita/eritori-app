@@ -1,4 +1,4 @@
-package com.example.flutter_example_app
+package com.qboad.eritori
 
 import io.flutter.embedding.android.FlutterActivity
 

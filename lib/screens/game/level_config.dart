@@ -76,30 +76,7 @@ class LevelConfig {
   static LevelConfig forLevel(int levelId) {
     switch (levelId) {
       case 2:
-        return LevelConfig(
-          levelId: 2,
-          closeThresholdFactor: 0.08,
-          lizardBody: const NormalizedCircle(
-            center: Offset(0.5, 0.55),
-            radiusFactor: 0.12,
-          ),
-          frillCircle: const NormalizedCircle(
-            center: Offset(0.5, 0.52),
-            radiusFactor: 0.22,
-          ),
-          shadowEllipse: const NormalizedEllipse(
-            center: Offset(0.5, 0.72),
-            radiusXFactor: 0.22,
-            radiusYFactor: 0.05,
-          ),
-          ngCircles: const [],
-          ngRects: const [],
-          swayAmplitudeFactor: 0.04,
-          minPoints: 6,
-          minPathLengthFactor: 0.2,
-          minAreaFactor: 0.001,
-          minIntersectionGap: 4,
-        );
+        return _baseLevelConfig(2);
       case 3:
         return LevelConfig(
           levelId: 3,
@@ -127,31 +104,35 @@ class LevelConfig {
         );
       case 1:
       default:
-        return LevelConfig(
-          levelId: 1,
-          closeThresholdFactor: 0.08,
-          lizardBody: const NormalizedCircle(
-            center: Offset(0.5, 0.55),
-            radiusFactor: 0.12,
-          ),
-          frillCircle: const NormalizedCircle(
-            center: Offset(0.5, 0.52),
-            radiusFactor: 0.22,
-          ),
-          shadowEllipse: const NormalizedEllipse(
-            center: Offset(0.5, 0.72),
-            radiusXFactor: 0.22,
-            radiusYFactor: 0.05,
-          ),
-          ngCircles: const [],
-          ngRects: const [],
-          swayAmplitudeFactor: 0.0,
-          minPoints: 6,
-          minPathLengthFactor: 0.2,
-          minAreaFactor: 0.001,
-          minIntersectionGap: 4,
-        );
+        return _baseLevelConfig(1);
     }
+  }
+
+  static LevelConfig _baseLevelConfig(int levelId) {
+    return LevelConfig(
+      levelId: levelId,
+      closeThresholdFactor: 0.08,
+      lizardBody: const NormalizedCircle(
+        center: Offset(0.5, 0.55),
+        radiusFactor: 0.12,
+      ),
+      frillCircle: const NormalizedCircle(
+        center: Offset(0.5, 0.52),
+        radiusFactor: 0.22,
+      ),
+      shadowEllipse: const NormalizedEllipse(
+        center: Offset(0.5, 0.72),
+        radiusXFactor: 0.22,
+        radiusYFactor: 0.05,
+      ),
+      ngCircles: const [],
+      ngRects: const [],
+      swayAmplitudeFactor: 0.0,
+      minPoints: 6,
+      minPathLengthFactor: 0.2,
+      minAreaFactor: 0.001,
+      minIntersectionGap: 4,
+    );
   }
 }
 

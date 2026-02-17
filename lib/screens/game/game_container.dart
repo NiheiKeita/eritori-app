@@ -34,10 +34,11 @@ class GameContainer extends StatefulWidget {
 
 class _GameContainerState extends State<GameContainer>
     with SingleTickerProviderStateMixin {
+  static const double _faceScale = 1.2;
   late final GameController _controller;
   late final AnimationController _swayController;
   final ImageProvider _backgroundImage = defaultBackgroundImage();
-  final ImageProvider _faceImage = defaultFaceImage();
+  late final ImageProvider _faceImage = faceImageForLevel(widget.levelId);
   ui.Image? _faceUiImage;
   Uint8List? _faceRgba;
   bool _hasNavigated = false;
@@ -102,15 +103,16 @@ class _GameContainerState extends State<GameContainer>
       return false;
     }
     final face = _config.resolvedBody(size, swayOffset);
+    final scaledRadius = face.radius * _faceScale;
     final rect = Rect.fromCenter(
       center: face.center,
-      width: face.radius * 2,
-      height: face.radius * 2,
+      width: scaledRadius * 2,
+      height: scaledRadius * 2,
     );
     if (!rect.contains(point)) {
       return false;
     }
-    if ((point - face.center).distance > face.radius) {
+    if ((point - face.center).distance > scaledRadius) {
       return false;
     }
 
@@ -142,7 +144,7 @@ class _GameContainerState extends State<GameContainer>
     if (index < 0 || index >= bytes.length) {
       return false;
     }
-    return bytes[index] > 0;
+    return bytes[index] > 16;
   }
 
   void _updateSway() {
@@ -236,6 +238,7 @@ class _GameContainerState extends State<GameContainer>
             swayOffset: _swayOffset,
             backgroundImage: _backgroundImage,
             faceImage: _faceImage,
+            faceScale: _faceScale,
             onPanStart: (position, size) {
               _lastSize = size;
               _controller.onPanStart(

@@ -16,6 +16,7 @@ class GamePresentation extends StatelessWidget {
     required this.swayOffset,
     required this.backgroundImage,
     required this.faceImage,
+    required this.faceScale,
     required this.onPanStart,
     required this.onPanUpdate,
     required this.onPanEnd,
@@ -31,6 +32,7 @@ class GamePresentation extends StatelessWidget {
   final Offset swayOffset;
   final ImageProvider backgroundImage;
   final ImageProvider faceImage;
+  final double faceScale;
   final void Function(Offset position, Size size) onPanStart;
   final void Function(Offset position, Size size) onPanUpdate;
   final void Function(Size size) onPanEnd;
@@ -79,7 +81,7 @@ class GamePresentation extends StatelessWidget {
                       Positioned.fill(
                         child: Image(
                           image: backgroundImage,
-                          fit: BoxFit.cover,
+                          fit: BoxFit.fitWidth,
                         ),
                       ),
                       _FaceImageLayer(
@@ -87,6 +89,7 @@ class GamePresentation extends StatelessWidget {
                         config: config,
                         swayOffset: swayOffset,
                         size: size,
+                        faceScale: faceScale,
                       ),
                       Positioned.fill(
                         child: CustomPaint(
@@ -209,20 +212,23 @@ class _FaceImageLayer extends StatelessWidget {
     required this.config,
     required this.swayOffset,
     required this.size,
+    required this.faceScale,
   });
 
   final ImageProvider faceImage;
   final LevelConfig config;
   final Offset swayOffset;
   final Size size;
+  final double faceScale;
 
   @override
   Widget build(BuildContext context) {
     final face = config.resolvedBody(size, swayOffset);
+    final scaledRadius = face.radius * faceScale;
     final rect = Rect.fromCenter(
       center: face.center,
-      width: face.radius * 2,
-      height: face.radius * 2,
+      width: scaledRadius * 2,
+      height: scaledRadius * 2,
     );
     return Positioned.fromRect(
       rect: rect,

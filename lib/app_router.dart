@@ -20,80 +20,101 @@ class AppRouter {
       routes: [
         GoRoute(
           path: '/',
-          builder: (context, state) {
-            return HomeContainer(
+          pageBuilder: (context, state) => _noTransitionPage(
+            state,
+            HomeContainer(
               onNavSelected: (item) => _onNavSelected(context, item),
-            );
-          },
+            ),
+          ),
         ),
         GoRoute(
           path: '/level-select',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final scope = AppScope.of(context);
-            return LevelSelectContainer(
-              controller: scope.levelSelectController,
-              onNavSelected: (item) => _onNavSelected(context, item),
+            return _noTransitionPage(
+              state,
+              LevelSelectContainer(
+                controller: scope.levelSelectController,
+                onNavSelected: (item) => _onNavSelected(context, item),
+              ),
             );
           },
         ),
         GoRoute(
           path: '/game/:levelId',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final scope = AppScope.of(context);
             final levelId = int.tryParse(state.pathParameters['levelId'] ?? '');
-            return GameContainer(
-              levelId: levelId ?? 1,
-              prefsRepository: scope.prefsRepository,
-              levelSelectController: scope.levelSelectController,
+            return _noTransitionPage(
+              state,
+              GameContainer(
+                levelId: levelId ?? 1,
+                prefsRepository: scope.prefsRepository,
+                levelSelectController: scope.levelSelectController,
+              ),
             );
           },
         ),
         GoRoute(
           path: '/result',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final data = state.extra as ResultData?;
-            return ResultContainer(
-              data: data ??
-                  const ResultData(
-                    levelId: 1,
-                    score: 0,
-                    success: false,
-                    bestUpdated: false,
-                    unlockedNext: false,
-                    unlockedLevel: 1,
-                    cutoutBytes: null,
-                  ),
+            return _noTransitionPage(
+              state,
+              ResultContainer(
+                data: data ??
+                    const ResultData(
+                      levelId: 1,
+                      score: 0,
+                      success: false,
+                      bestUpdated: false,
+                      unlockedNext: false,
+                      unlockedLevel: 1,
+                      cutoutBytes: null,
+                    ),
+              ),
             );
           },
         ),
         GoRoute(
           path: '/coming-soon/:type',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final type = state.pathParameters['type'] ?? 'rank';
             final title = type == 'shop' ? 'Shop' : 'Ranking';
-            return ComingSoonContainer(
-              title: title,
-              onNavSelected: (item) => _onNavSelected(context, item),
+            return _noTransitionPage(
+              state,
+              ComingSoonContainer(
+                title: title,
+                onNavSelected: (item) => _onNavSelected(context, item),
+              ),
             );
           },
         ),
         GoRoute(
           path: '/settings',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final scope = AppScope.of(context);
-            return SettingsContainer(
-              controller: scope.settingsController,
-              levelSelectController: scope.levelSelectController,
-              onNavSelected: (item) => _onNavSelected(context, item),
+            return _noTransitionPage(
+              state,
+              SettingsContainer(
+                controller: scope.settingsController,
+                levelSelectController: scope.levelSelectController,
+                onNavSelected: (item) => _onNavSelected(context, item),
+              ),
             );
           },
         ),
         GoRoute(
           path: '/trace-cutout',
-          builder: (context, state) => const TraceCutoutScreen(),
+          pageBuilder: (context, state) =>
+              _noTransitionPage(state, const TraceCutoutScreen()),
         ),
       ],
     );
+  }
+
+  Page<void> _noTransitionPage(GoRouterState state, Widget child) {
+    return NoTransitionPage(key: state.pageKey, child: child);
   }
 
   void _onNavSelected(BuildContext context, BottomNavItem item) {

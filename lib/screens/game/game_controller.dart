@@ -226,7 +226,7 @@ class GameController extends ChangeNotifier {
     if (distance == 0) {
       return faceHitTester(current, size, swayOffset);
     }
-    final step = 4.0;
+    final step = 2.0;
     final steps = (distance / step).ceil();
     for (var i = 0; i <= steps; i++) {
       final t = i / steps;
