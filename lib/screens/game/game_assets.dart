@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 const String frillImageAsset = 'assets/images/eri.png';
 const String faceImageAsset = 'assets/images/face.png';
 const String faceLevel2ImageAsset = 'assets/images/level2/face.PNG';
+const BoxFit gameBackgroundFit = BoxFit.fitWidth;
 
 ImageProvider defaultBackgroundImage() {
   return const AssetImage(frillImageAsset);

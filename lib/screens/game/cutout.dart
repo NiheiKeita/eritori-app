@@ -4,13 +4,11 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import 'game_assets.dart';
 import 'geometry.dart';
 
 class CutoutResult {
-  const CutoutResult({
-    required this.bytes,
-    required this.size,
-  });
+  const CutoutResult({required this.bytes, required this.size});
 
   final Uint8List bytes;
   final Size size;
@@ -41,8 +39,11 @@ int calculateCutoutScore({
   required Offset centerPoint,
   required Size size,
 }) {
-  final area =
-      calculateCutoutArea(points: points, centerPoint: centerPoint, size: size);
+  final area = calculateCutoutArea(
+    points: points,
+    centerPoint: centerPoint,
+    size: size,
+  );
   return (area / 10).round();
 }
 
@@ -72,8 +73,11 @@ Future<CutoutResult?> createCutout({
     canvas.translate(-bounds.left, -bounds.top);
   }
 
-  final boxFit = applyBoxFit(BoxFit.cover, Size(image.width.toDouble(),
-      image.height.toDouble()), size);
+  final boxFit = applyBoxFit(
+    gameBackgroundFit,
+    Size(image.width.toDouble(), image.height.toDouble()),
+    size,
+  );
   final fittedSource = boxFit.source;
   final fittedDestination = boxFit.destination;
   final inputSubrect = Alignment.center.inscribe(
@@ -98,21 +102,14 @@ Future<CutoutResult?> createCutout({
   canvas.clipPath(clipPath);
 
   final paint = Paint();
-  canvas.drawImageRect(
-    image,
-    inputSubrect,
-    outputSubrect,
-    paint,
-  );
+  canvas.drawImageRect(image, inputSubrect, outputSubrect, paint);
 
   final picture = recorder.endRecording();
   final outputImage = await picture.toImage(
     outputRect.width.ceil(),
     outputRect.height.ceil(),
   );
-  final byteData = await outputImage.toByteData(
-    format: ui.ImageByteFormat.png,
-  );
+  final byteData = await outputImage.toByteData(format: ui.ImageByteFormat.png);
   if (byteData == null) {
     return null;
   }
@@ -126,13 +123,16 @@ Future<ui.Image> _loadImage(ImageProvider provider) async {
   final completer = Completer<ui.Image>();
   final stream = provider.resolve(const ImageConfiguration());
   late final ImageStreamListener listener;
-  listener = ImageStreamListener((imageInfo, _) {
-    completer.complete(imageInfo.image);
-    stream.removeListener(listener);
-  }, onError: (error, stack) {
-    completer.completeError(error, stack);
-    stream.removeListener(listener);
-  });
+  listener = ImageStreamListener(
+    (imageInfo, _) {
+      completer.complete(imageInfo.image);
+      stream.removeListener(listener);
+    },
+    onError: (error, stack) {
+      completer.completeError(error, stack);
+      stream.removeListener(listener);
+    },
+  );
   stream.addListener(listener);
   return completer.future;
 }

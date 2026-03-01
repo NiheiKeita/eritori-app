@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'frill_painter.dart';
+import 'game_assets.dart';
 import 'game_controller.dart';
 import 'level_config.dart';
 
@@ -65,10 +66,7 @@ class GamePresentation extends StatelessWidget {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final size = Size(
-                  constraints.maxWidth,
-                  constraints.maxHeight,
-                );
+                final size = Size(constraints.maxWidth, constraints.maxHeight);
                 return GestureDetector(
                   key: const ValueKey('game_gesture'),
                   onPanStart: (details) =>
@@ -81,7 +79,7 @@ class GamePresentation extends StatelessWidget {
                       Positioned.fill(
                         child: Image(
                           image: backgroundImage,
-                          fit: BoxFit.fitWidth,
+                          fit: gameBackgroundFit,
                         ),
                       ),
                       _FaceImageLayer(
@@ -233,10 +231,7 @@ class _FaceImageLayer extends StatelessWidget {
     return Positioned.fromRect(
       rect: rect,
       child: ClipOval(
-        child: Image(
-          image: faceImage,
-          fit: BoxFit.cover,
-        ),
+        child: Image(image: faceImage, fit: BoxFit.cover),
       ),
     );
   }
