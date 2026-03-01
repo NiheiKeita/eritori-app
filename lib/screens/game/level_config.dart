@@ -1,6 +1,7 @@
+import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class LevelConfig {
   const LevelConfig({
@@ -16,6 +17,9 @@ class LevelConfig {
     required this.minPathLengthFactor,
     required this.minAreaFactor,
     required this.minIntersectionGap,
+    required this.faceScale,
+    required this.frillDisplayScale,
+    required this.faceOffset,
   });
 
   final int levelId;
@@ -30,6 +34,13 @@ class LevelConfig {
   final double minPathLengthFactor;
   final double minAreaFactor;
   final int minIntersectionGap;
+  final double faceScale;
+  final double frillDisplayScale;
+  final Offset faceOffset;
+
+  static const String assetPath = 'assets/game/level.json';
+  static const int maxLevel = 3;
+  static Map<int, LevelConfig> _configs = _defaultConfigs;
 
   double closeThreshold(Size size) =>
       closeThresholdFactor * min(size.width, size.height);
@@ -54,9 +65,7 @@ class LevelConfig {
   }
 
   List<Rect> resolvedRects(Size size, Offset swayOffset) {
-    return ngRects
-        .map((rect) => rect.toRect(size).shift(swayOffset))
-        .toList();
+    return ngRects.map((rect) => rect.toRect(size).shift(swayOffset)).toList();
   }
 
   CircleArea resolvedBody(Size size, Offset swayOffset) {
@@ -71,69 +80,152 @@ class LevelConfig {
     return shadowEllipse.toEllipse(size).shift(swayOffset);
   }
 
-  static const int maxLevel = 3;
-
-  static LevelConfig forLevel(int levelId) {
-    switch (levelId) {
-      case 2:
-        return _baseLevelConfig(2);
-      case 3:
-        return LevelConfig(
-          levelId: 3,
-          closeThresholdFactor: 0.08,
-          lizardBody: const NormalizedCircle(
-            center: Offset(0.5, 0.55),
-            radiusFactor: 0.12,
-          ),
-          frillCircle: const NormalizedCircle(
-            center: Offset(0.5, 0.52),
-            radiusFactor: 0.22,
-          ),
-          shadowEllipse: const NormalizedEllipse(
-            center: Offset(0.5, 0.72),
-            radiusXFactor: 0.22,
-            radiusYFactor: 0.05,
-          ),
-          ngCircles: const [],
-          ngRects: const [],
-          swayAmplitudeFactor: 0.05,
-          minPoints: 6,
-          minPathLengthFactor: 0.2,
-          minAreaFactor: 0.001,
-          minIntersectionGap: 4,
-        );
-      case 1:
-      default:
-        return _baseLevelConfig(1);
-    }
+  Offset resolvedFaceCenter(Size size, Offset swayOffset) {
+    final frillCenter = resolvedFrill(size, swayOffset).center;
+    final base = min(size.width, size.height);
+    return frillCenter + Offset(faceOffset.dx * base, faceOffset.dy * base);
   }
 
-  static LevelConfig _baseLevelConfig(int levelId) {
+  static LevelConfig forLevel(int levelId) {
+    return _configs[levelId] ?? _configs[1]!;
+  }
+
+  static Future<void> loadFromAsset([String path = assetPath]) async {
+    final raw = await rootBundle.loadString(path);
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map<String, dynamic>) {
+      throw FormatException('Invalid level config root: $path');
+    }
+    final levels = decoded['levels'];
+    if (levels is! List) {
+      throw FormatException('Missing levels array: $path');
+    }
+
+    final configs = <int, LevelConfig>{};
+    for (final entry in levels) {
+      if (entry is! Map<String, dynamic>) {
+        throw const FormatException('Each level entry must be an object');
+      }
+      final config = LevelConfig.fromJson(entry);
+      configs[config.levelId] = config;
+    }
+    if (configs.isEmpty) {
+      throw FormatException('No level configs found: $path');
+    }
+    _configs = configs;
+  }
+
+  factory LevelConfig.fromJson(Map<String, dynamic> json) {
     return LevelConfig(
-      levelId: levelId,
+      levelId: _readInt(json, 'levelId'),
+      closeThresholdFactor: _readDouble(json, 'closeThresholdFactor'),
+      lizardBody: NormalizedCircle.fromJson(_readMap(json, 'lizardBody')),
+      frillCircle: NormalizedCircle.fromJson(_readMap(json, 'frillCircle')),
+      shadowEllipse: NormalizedEllipse.fromJson(
+        _readMap(json, 'shadowEllipse'),
+      ),
+      ngCircles: _readList(
+        json,
+        'ngCircles',
+      ).map((item) => NormalizedCircle.fromJson(_castMap(item))).toList(),
+      ngRects: _readList(
+        json,
+        'ngRects',
+      ).map((item) => NormalizedRect.fromJson(_castMap(item))).toList(),
+      swayAmplitudeFactor: _readDouble(json, 'swayAmplitudeFactor'),
+      minPoints: _readInt(json, 'minPoints'),
+      minPathLengthFactor: _readDouble(json, 'minPathLengthFactor'),
+      minAreaFactor: _readDouble(json, 'minAreaFactor'),
+      minIntersectionGap: _readInt(json, 'minIntersectionGap'),
+      faceScale: _readDouble(json, 'faceScale'),
+      frillDisplayScale: _readDouble(json, 'frillDisplayScale'),
+      faceOffset: _readOffset(json, 'faceOffset'),
+    );
+  }
+
+  static const Map<int, LevelConfig> _defaultConfigs = {
+    1: LevelConfig(
+      levelId: 1,
       closeThresholdFactor: 0.08,
-      lizardBody: const NormalizedCircle(
+      lizardBody: NormalizedCircle(
         center: Offset(0.5, 0.55),
         radiusFactor: 0.12,
       ),
-      frillCircle: const NormalizedCircle(
+      frillCircle: NormalizedCircle(
         center: Offset(0.5, 0.52),
         radiusFactor: 0.22,
       ),
-      shadowEllipse: const NormalizedEllipse(
+      shadowEllipse: NormalizedEllipse(
         center: Offset(0.5, 0.72),
         radiusXFactor: 0.22,
         radiusYFactor: 0.05,
       ),
-      ngCircles: const [],
-      ngRects: const [],
+      ngCircles: [],
+      ngRects: [],
       swayAmplitudeFactor: 0.0,
       minPoints: 6,
       minPathLengthFactor: 0.2,
       minAreaFactor: 0.001,
       minIntersectionGap: 4,
-    );
-  }
+      faceScale: 1.2,
+      frillDisplayScale: 1.1,
+      faceOffset: Offset.zero,
+    ),
+    2: LevelConfig(
+      levelId: 2,
+      closeThresholdFactor: 0.08,
+      lizardBody: NormalizedCircle(
+        center: Offset(0.5, 0.55),
+        radiusFactor: 0.12,
+      ),
+      frillCircle: NormalizedCircle(
+        center: Offset(0.5, 0.52),
+        radiusFactor: 0.22,
+      ),
+      shadowEllipse: NormalizedEllipse(
+        center: Offset(0.5, 0.72),
+        radiusXFactor: 0.22,
+        radiusYFactor: 0.05,
+      ),
+      ngCircles: [],
+      ngRects: [],
+      swayAmplitudeFactor: 0.0,
+      minPoints: 6,
+      minPathLengthFactor: 0.2,
+      minAreaFactor: 0.001,
+      minIntersectionGap: 4,
+      faceScale: 1.2,
+      frillDisplayScale: 1.1,
+      faceOffset: Offset.zero,
+    ),
+    3: LevelConfig(
+      levelId: 3,
+      closeThresholdFactor: 0.08,
+      lizardBody: NormalizedCircle(
+        center: Offset(0.5, 0.55),
+        radiusFactor: 0.12,
+      ),
+      frillCircle: NormalizedCircle(
+        center: Offset(0.5, 0.52),
+        radiusFactor: 0.22,
+      ),
+      shadowEllipse: NormalizedEllipse(
+        center: Offset(0.5, 0.72),
+        radiusXFactor: 0.22,
+        radiusYFactor: 0.05,
+      ),
+      ngCircles: [],
+      ngRects: [],
+      swayAmplitudeFactor: 0.05,
+      minPoints: 6,
+      minPathLengthFactor: 0.2,
+      minAreaFactor: 0.001,
+      minIntersectionGap: 4,
+      faceScale: 1.2,
+      frillDisplayScale: 1.1,
+      faceOffset: Offset.zero,
+    ),
+  };
 }
 
 class CircleArea {
@@ -157,11 +249,8 @@ class EllipseArea {
   final double radiusX;
   final double radiusY;
 
-  EllipseArea shift(Offset delta) => EllipseArea(
-        center: center + delta,
-        radiusX: radiusX,
-        radiusY: radiusY,
-      );
+  EllipseArea shift(Offset delta) =>
+      EllipseArea(center: center + delta, radiusX: radiusX, radiusY: radiusY);
 }
 
 class NormalizedCircle {
@@ -175,6 +264,13 @@ class NormalizedCircle {
     return CircleArea(
       center: Offset(center.dx * size.width, center.dy * size.height),
       radius: radius,
+    );
+  }
+
+  factory NormalizedCircle.fromJson(Map<String, dynamic> json) {
+    return NormalizedCircle(
+      center: _readOffset(json, 'center'),
+      radiusFactor: _readDouble(json, 'radiusFactor'),
     );
   }
 }
@@ -195,6 +291,14 @@ class NormalizedEllipse {
       center: Offset(center.dx * size.width, center.dy * size.height),
       radiusX: radiusXFactor * size.width,
       radiusY: radiusYFactor * size.height,
+    );
+  }
+
+  factory NormalizedEllipse.fromJson(Map<String, dynamic> json) {
+    return NormalizedEllipse(
+      center: _readOffset(json, 'center'),
+      radiusXFactor: _readDouble(json, 'radiusXFactor'),
+      radiusYFactor: _readDouble(json, 'radiusYFactor'),
     );
   }
 }
@@ -220,4 +324,59 @@ class NormalizedRect {
       height * size.height,
     );
   }
+
+  factory NormalizedRect.fromJson(Map<String, dynamic> json) {
+    return NormalizedRect(
+      left: _readDouble(json, 'left'),
+      top: _readDouble(json, 'top'),
+      width: _readDouble(json, 'width'),
+      height: _readDouble(json, 'height'),
+    );
+  }
+}
+
+Map<String, dynamic> _readMap(Map<String, dynamic> json, String key) {
+  return _castMap(json[key]);
+}
+
+Map<String, dynamic> _castMap(Object? value) {
+  if (value is Map<String, dynamic>) {
+    return value;
+  }
+  if (value is Map) {
+    return value.map((key, mapValue) => MapEntry(key.toString(), mapValue));
+  }
+  throw FormatException('Expected object but got $value');
+}
+
+List<dynamic> _readList(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is List) {
+    return value;
+  }
+  throw FormatException('Expected list for $key but got $value');
+}
+
+int _readInt(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  throw FormatException('Expected int for $key but got $value');
+}
+
+double _readDouble(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value is num) {
+    return value.toDouble();
+  }
+  throw FormatException('Expected number for $key but got $value');
+}
+
+Offset _readOffset(Map<String, dynamic> json, String key) {
+  final map = _readMap(json, key);
+  return Offset(_readDouble(map, 'x'), _readDouble(map, 'y'));
 }

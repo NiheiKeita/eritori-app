@@ -6,7 +6,6 @@ const String frillImageAsset = 'assets/images/eri.png';
 const String faceImageAsset = 'assets/images/face.png';
 const String faceLevel2ImageAsset = 'assets/images/level2/face.PNG';
 const BoxFit gameFrillFit = BoxFit.contain;
-const double frillDisplayScale = 1.1;
 
 ImageProvider defaultBackgroundImage() {
   return const AssetImage(frillImageAsset);
@@ -31,8 +30,8 @@ Rect frillImageRect({
   final frill = config.resolvedFrill(size, swayOffset);
   return Rect.fromCenter(
     center: frill.center,
-    width: frill.radius * 2 * frillDisplayScale,
-    height: frill.radius * 2 * frillDisplayScale,
+    width: frill.radius * 2 * config.frillDisplayScale,
+    height: frill.radius * 2 * config.frillDisplayScale,
   );
 }
 
@@ -40,13 +39,11 @@ Rect faceImageRect({
   required Size size,
   required LevelConfig config,
   required Offset swayOffset,
-  required double faceScale,
 }) {
-  final frill = config.resolvedFrill(size, swayOffset);
   final face = config.resolvedBody(size, swayOffset);
-  final scaledRadius = face.radius * faceScale;
+  final scaledRadius = face.radius * config.faceScale;
   return Rect.fromCenter(
-    center: frill.center,
+    center: config.resolvedFaceCenter(size, swayOffset),
     width: scaledRadius * 2,
     height: scaledRadius * 2,
   );

@@ -17,7 +17,6 @@ class GamePresentation extends StatelessWidget {
     required this.swayOffset,
     required this.backgroundImage,
     required this.faceImage,
-    required this.faceScale,
     required this.onPanStart,
     required this.onPanUpdate,
     required this.onPanEnd,
@@ -33,7 +32,6 @@ class GamePresentation extends StatelessWidget {
   final Offset swayOffset;
   final ImageProvider backgroundImage;
   final ImageProvider faceImage;
-  final double faceScale;
   final void Function(Offset position, Size size) onPanStart;
   final void Function(Offset position, Size size) onPanUpdate;
   final void Function(Size size) onPanEnd;
@@ -83,7 +81,6 @@ class GamePresentation extends StatelessWidget {
                           config: config,
                           swayOffset: swayOffset,
                           size: size,
-                          faceScale: faceScale,
                         ),
                       ),
                       Positioned.fill(
@@ -208,7 +205,6 @@ class _CharacterImageLayer extends StatelessWidget {
     required this.config,
     required this.swayOffset,
     required this.size,
-    required this.faceScale,
   });
 
   final ImageProvider frillImage;
@@ -216,7 +212,6 @@ class _CharacterImageLayer extends StatelessWidget {
   final LevelConfig config;
   final Offset swayOffset;
   final Size size;
-  final double faceScale;
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +224,6 @@ class _CharacterImageLayer extends StatelessWidget {
       size: size,
       config: config,
       swayOffset: swayOffset,
-      faceScale: faceScale,
     );
     return Stack(
       children: [

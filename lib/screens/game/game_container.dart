@@ -33,7 +33,6 @@ class GameContainer extends StatefulWidget {
 
 class _GameContainerState extends State<GameContainer>
     with SingleTickerProviderStateMixin {
-  static const double _faceScale = 1.2;
   late final GameController _controller;
   late final AnimationController _swayController;
   final ImageProvider _backgroundImage = defaultBackgroundImage();
@@ -125,7 +124,6 @@ class _GameContainerState extends State<GameContainer>
       size: size,
       config: _config,
       swayOffset: swayOffset,
-      faceScale: _faceScale,
     );
     return _isImageOpaqueAtPoint(
       point: point,
@@ -305,7 +303,6 @@ class _GameContainerState extends State<GameContainer>
             swayOffset: _swayOffset,
             backgroundImage: _backgroundImage,
             faceImage: _faceImage,
-            faceScale: _faceScale,
             onPanStart: (position, size) {
               _lastSize = size;
               _controller.onPanStart(

@@ -20,7 +20,6 @@ void main() {
           swayOffset: Offset.zero,
           backgroundImage: defaultBackgroundImage(),
           faceImage: defaultFaceImage(),
-          faceScale: 1.2,
           onPanStart: (_, __) {},
           onPanUpdate: (_, __) {},
           onPanEnd: (_) {},
