@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -41,6 +40,8 @@ class _GameContainerState extends State<GameContainer>
   late final ImageProvider _faceImage = faceImageForLevel(widget.levelId);
   ui.Image? _faceUiImage;
   Uint8List? _faceRgba;
+  ui.Image? _backgroundUiImage;
+  Uint8List? _backgroundRgba;
   bool _hasNavigated = false;
   Offset _swayOffset = Offset.zero;
   Size _lastSize = Size.zero;
@@ -54,6 +55,7 @@ class _GameContainerState extends State<GameContainer>
       ..addListener(_onControllerChanged)
       ..loadTutorialState();
     _controller.start();
+    _loadBackgroundImage();
     _loadFaceImage();
     _swayController = AnimationController(
       vsync: this,
@@ -70,8 +72,26 @@ class _GameContainerState extends State<GameContainer>
       ..removeListener(_onControllerChanged)
       ..dispose();
     _swayController.dispose();
+    _backgroundUiImage?.dispose();
     _faceUiImage?.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadBackgroundImage() async {
+    final data = await rootBundle.load(frillImageAsset);
+    final bytes = data.buffer.asUint8List();
+    final completer = Completer<ui.Image>();
+    ui.decodeImageFromList(bytes, completer.complete);
+    final image = await completer.future;
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (!mounted) {
+      image.dispose();
+      return;
+    }
+    setState(() {
+      _backgroundUiImage = image;
+      _backgroundRgba = byteData?.buffer.asUint8List();
+    });
   }
 
   Future<void> _loadFaceImage() async {
@@ -80,8 +100,7 @@ class _GameContainerState extends State<GameContainer>
     final completer = Completer<ui.Image>();
     ui.decodeImageFromList(bytes, completer.complete);
     final image = await completer.future;
-    final byteData =
-        await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
     if (!mounted) {
       image.dispose();
       return;
@@ -92,11 +111,7 @@ class _GameContainerState extends State<GameContainer>
     });
   }
 
-  bool _isFaceOpaque(
-    Offset point,
-    Size size,
-    Offset swayOffset,
-  ) {
+  bool _isFaceOpaque(Offset point, Size size, Offset swayOffset) {
     final image = _faceUiImage;
     final bytes = _faceRgba;
     if (image == null || bytes == null) {
@@ -132,9 +147,49 @@ class _GameContainerState extends State<GameContainer>
     }
 
     final normX =
-        (local.dx - outputSubrect.left) / outputSubrect.width.clamp(1, double.infinity);
+        (local.dx - outputSubrect.left) /
+        outputSubrect.width.clamp(1, double.infinity);
     final normY =
-        (local.dy - outputSubrect.top) / outputSubrect.height.clamp(1, double.infinity);
+        (local.dy - outputSubrect.top) /
+        outputSubrect.height.clamp(1, double.infinity);
+    final sourceX = inputSubrect.left + normX * inputSubrect.width;
+    final sourceY = inputSubrect.top + normY * inputSubrect.height;
+
+    final px = sourceX.clamp(0, image.width - 1).floor();
+    final py = sourceY.clamp(0, image.height - 1).floor();
+    final index = (py * image.width + px) * 4 + 3;
+    if (index < 0 || index >= bytes.length) {
+      return false;
+    }
+    return bytes[index] > 16;
+  }
+
+  bool _isBackgroundOpaque(Offset point, Size size) {
+    final image = _backgroundUiImage;
+    final bytes = _backgroundRgba;
+    if (image == null || bytes == null) {
+      return false;
+    }
+    final imageSize = Size(image.width.toDouble(), image.height.toDouble());
+    final fitted = applyBoxFit(gameBackgroundFit, imageSize, size);
+    final inputSubrect = Alignment.center.inscribe(
+      fitted.source,
+      Offset.zero & imageSize,
+    );
+    final outputSubrect = Alignment.center.inscribe(
+      fitted.destination,
+      Offset.zero & size,
+    );
+    if (!outputSubrect.contains(point)) {
+      return false;
+    }
+
+    final normX =
+        (point.dx - outputSubrect.left) /
+        outputSubrect.width.clamp(1, double.infinity);
+    final normY =
+        (point.dy - outputSubrect.top) /
+        outputSubrect.height.clamp(1, double.infinity);
     final sourceX = inputSubrect.left + normX * inputSubrect.width;
     final sourceY = inputSubrect.top + normY * inputSubrect.height;
 
@@ -169,13 +224,23 @@ class _GameContainerState extends State<GameContainer>
       CutoutResult? cutoutResult;
       if (success) {
         if (_lastSize != Size.zero) {
-          final bodyCenter =
-              _config.resolvedBody(_lastSize, _swayOffset).center;
-          final cutoutScore = calculateCutoutScore(
-            points: _controller.points,
-            centerPoint: bodyCenter,
-            size: _lastSize,
-          );
+          final bodyCenter = _config
+              .resolvedBody(_lastSize, _swayOffset)
+              .center;
+          final backgroundReady =
+              _backgroundUiImage != null && _backgroundRgba != null;
+          final cutoutScore = backgroundReady
+              ? await calculateOpaqueCutoutScore(
+                  points: _controller.points,
+                  centerPoint: bodyCenter,
+                  size: _lastSize,
+                  opaquePointTester: _isBackgroundOpaque,
+                )
+              : calculateCutoutScore(
+                  points: _controller.points,
+                  centerPoint: bodyCenter,
+                  size: _lastSize,
+                );
           _controller.updateScore(cutoutScore);
         }
         progressResult = await widget.levelSelectController.recordResult(
@@ -184,8 +249,9 @@ class _GameContainerState extends State<GameContainer>
           success: true,
         );
         if (_lastSize != Size.zero) {
-          final bodyCenter =
-              _config.resolvedBody(_lastSize, _swayOffset).center;
+          final bodyCenter = _config
+              .resolvedBody(_lastSize, _swayOffset)
+              .center;
           try {
             cutoutResult = await createCutout(
               background: _backgroundImage,
@@ -209,7 +275,8 @@ class _GameContainerState extends State<GameContainer>
           success: success,
           bestUpdated: progressResult?.bestUpdated ?? false,
           unlockedNext: progressResult?.unlockedNext ?? false,
-          unlockedLevel: progressResult?.unlockedLevel ??
+          unlockedLevel:
+              progressResult?.unlockedLevel ??
               widget.levelSelectController.unlockedLevel,
           cutoutBytes: cutoutResult?.bytes,
         ),

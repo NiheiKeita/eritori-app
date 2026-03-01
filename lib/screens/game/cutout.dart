@@ -14,6 +14,8 @@ class CutoutResult {
   final Size size;
 }
 
+typedef OpaquePointTester = bool Function(Offset point, Size size);
+
 double calculateCutoutArea({
   required List<Offset> points,
   required Offset centerPoint,
@@ -43,6 +45,69 @@ int calculateCutoutScore({
     points: points,
     centerPoint: centerPoint,
     size: size,
+  );
+  return (area / 10).round();
+}
+
+Future<double> calculateOpaqueCutoutArea({
+  required List<Offset> points,
+  required Offset centerPoint,
+  required Size size,
+  required OpaquePointTester opaquePointTester,
+}) async {
+  if (points.length < 3 || size.isEmpty) {
+    return 0;
+  }
+  final path = Path()..addPolygon(points, true);
+  final bounds = path.getBounds();
+  if (bounds.isEmpty) {
+    return 0;
+  }
+
+  final isCenterInside = path.contains(centerPoint);
+  var area = 0.0;
+  final minX = isCenterInside
+      ? 0
+      : bounds.left.floor().clamp(0, size.width.ceil());
+  final maxX = isCenterInside
+      ? size.width.ceil()
+      : bounds.right.ceil().clamp(0, size.width.ceil());
+  final minY = isCenterInside
+      ? 0
+      : bounds.top.floor().clamp(0, size.height.ceil());
+  final maxY = isCenterInside
+      ? size.height.ceil()
+      : bounds.bottom.ceil().clamp(0, size.height.ceil());
+
+  for (var y = minY; y < maxY; y++) {
+    for (var x = minX; x < maxX; x++) {
+      final point = Offset(x + 0.5, y + 0.5);
+      if (!opaquePointTester(point, size)) {
+        continue;
+      }
+      final isInside = path.contains(point);
+      if (isCenterInside ? !isInside : isInside) {
+        area += 1;
+      }
+    }
+    if (y % 32 == 0) {
+      await Future<void>.delayed(Duration.zero);
+    }
+  }
+  return area;
+}
+
+Future<int> calculateOpaqueCutoutScore({
+  required List<Offset> points,
+  required Offset centerPoint,
+  required Size size,
+  required OpaquePointTester opaquePointTester,
+}) async {
+  final area = await calculateOpaqueCutoutArea(
+    points: points,
+    centerPoint: centerPoint,
+    size: size,
+    opaquePointTester: opaquePointTester,
   );
   return (area / 10).round();
 }
