@@ -77,17 +77,14 @@ class GamePresentation extends StatelessWidget {
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: Image(
-                          image: backgroundImage,
-                          fit: gameBackgroundFit,
+                        child: _CharacterImageLayer(
+                          frillImage: backgroundImage,
+                          faceImage: faceImage,
+                          config: config,
+                          swayOffset: swayOffset,
+                          size: size,
+                          faceScale: faceScale,
                         ),
-                      ),
-                      _FaceImageLayer(
-                        faceImage: faceImage,
-                        config: config,
-                        swayOffset: swayOffset,
-                        size: size,
-                        faceScale: faceScale,
                       ),
                       Positioned.fill(
                         child: CustomPaint(
@@ -187,7 +184,7 @@ class _ResultOverlay extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.9),
+          color: color.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(24),
         ),
         child: Text(
@@ -204,8 +201,9 @@ class _ResultOverlay extends StatelessWidget {
   }
 }
 
-class _FaceImageLayer extends StatelessWidget {
-  const _FaceImageLayer({
+class _CharacterImageLayer extends StatelessWidget {
+  const _CharacterImageLayer({
+    required this.frillImage,
     required this.faceImage,
     required this.config,
     required this.swayOffset,
@@ -213,6 +211,7 @@ class _FaceImageLayer extends StatelessWidget {
     required this.faceScale,
   });
 
+  final ImageProvider frillImage;
   final ImageProvider faceImage;
   final LevelConfig config;
   final Offset swayOffset;
@@ -221,18 +220,30 @@ class _FaceImageLayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final face = config.resolvedBody(size, swayOffset);
-    final scaledRadius = face.radius * faceScale;
-    final rect = Rect.fromCenter(
-      center: face.center,
-      width: scaledRadius * 2,
-      height: scaledRadius * 2,
+    final frillRect = frillImageRect(
+      size: size,
+      config: config,
+      swayOffset: swayOffset,
     );
-    return Positioned.fromRect(
-      rect: rect,
-      child: ClipOval(
-        child: Image(image: faceImage, fit: BoxFit.cover),
-      ),
+    final faceRect = faceImageRect(
+      size: size,
+      config: config,
+      swayOffset: swayOffset,
+      faceScale: faceScale,
+    );
+    return Stack(
+      children: [
+        Positioned.fromRect(
+          rect: frillRect,
+          child: Image(image: frillImage, fit: gameFrillFit),
+        ),
+        Positioned.fromRect(
+          rect: faceRect,
+          child: ClipOval(
+            child: Image(image: faceImage, fit: BoxFit.cover),
+          ),
+        ),
+      ],
     );
   }
 }

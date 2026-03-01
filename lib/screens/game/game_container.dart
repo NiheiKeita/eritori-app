@@ -95,7 +95,11 @@ class _GameContainerState extends State<GameContainer>
   }
 
   Future<void> _loadFaceImage() async {
-    final data = await rootBundle.load(faceImageAsset);
+    final provider = _faceImage;
+    final assetName = provider is AssetImage
+        ? provider.assetName
+        : faceImageAsset;
+    final data = await rootBundle.load(assetName);
     final bytes = data.buffer.asUint8List();
     final completer = Completer<ui.Image>();
     ui.decodeImageFromList(bytes, completer.complete);
@@ -117,31 +121,63 @@ class _GameContainerState extends State<GameContainer>
     if (image == null || bytes == null) {
       return false;
     }
-    final face = _config.resolvedBody(size, swayOffset);
-    final scaledRadius = face.radius * _faceScale;
-    final rect = Rect.fromCenter(
-      center: face.center,
-      width: scaledRadius * 2,
-      height: scaledRadius * 2,
+    final rect = faceImageRect(
+      size: size,
+      config: _config,
+      swayOffset: swayOffset,
+      faceScale: _faceScale,
     );
-    if (!rect.contains(point)) {
+    return _isImageOpaqueAtPoint(
+      point: point,
+      destinationRect: rect,
+      image: image,
+      bytes: bytes,
+      fit: BoxFit.cover,
+    );
+  }
+
+  bool _isBackgroundOpaque(Offset point, Size size) {
+    final image = _backgroundUiImage;
+    final bytes = _backgroundRgba;
+    if (image == null || bytes == null) {
       return false;
     }
-    if ((point - face.center).distance > scaledRadius) {
+    final rect = frillImageRect(
+      size: size,
+      config: _config,
+      swayOffset: _swayOffset,
+    );
+    return _isImageOpaqueAtPoint(
+      point: point,
+      destinationRect: rect,
+      image: image,
+      bytes: bytes,
+      fit: gameFrillFit,
+    );
+  }
+
+  bool _isImageOpaqueAtPoint({
+    required Offset point,
+    required Rect destinationRect,
+    required ui.Image image,
+    required Uint8List bytes,
+    required BoxFit fit,
+  }) {
+    if (!destinationRect.contains(point)) {
       return false;
     }
 
     final imageSize = Size(image.width.toDouble(), image.height.toDouble());
-    final fitted = applyBoxFit(BoxFit.cover, imageSize, rect.size);
+    final fitted = applyBoxFit(fit, imageSize, destinationRect.size);
     final inputSubrect = Alignment.center.inscribe(
       fitted.source,
       Offset.zero & imageSize,
     );
     final outputSubrect = Alignment.center.inscribe(
       fitted.destination,
-      Offset.zero & rect.size,
+      Offset.zero & destinationRect.size,
     );
-    final local = point - rect.topLeft;
+    final local = point - destinationRect.topLeft;
     if (!outputSubrect.contains(local)) {
       return false;
     }
@@ -151,44 +187,6 @@ class _GameContainerState extends State<GameContainer>
         outputSubrect.width.clamp(1, double.infinity);
     final normY =
         (local.dy - outputSubrect.top) /
-        outputSubrect.height.clamp(1, double.infinity);
-    final sourceX = inputSubrect.left + normX * inputSubrect.width;
-    final sourceY = inputSubrect.top + normY * inputSubrect.height;
-
-    final px = sourceX.clamp(0, image.width - 1).floor();
-    final py = sourceY.clamp(0, image.height - 1).floor();
-    final index = (py * image.width + px) * 4 + 3;
-    if (index < 0 || index >= bytes.length) {
-      return false;
-    }
-    return bytes[index] > 16;
-  }
-
-  bool _isBackgroundOpaque(Offset point, Size size) {
-    final image = _backgroundUiImage;
-    final bytes = _backgroundRgba;
-    if (image == null || bytes == null) {
-      return false;
-    }
-    final imageSize = Size(image.width.toDouble(), image.height.toDouble());
-    final fitted = applyBoxFit(gameBackgroundFit, imageSize, size);
-    final inputSubrect = Alignment.center.inscribe(
-      fitted.source,
-      Offset.zero & imageSize,
-    );
-    final outputSubrect = Alignment.center.inscribe(
-      fitted.destination,
-      Offset.zero & size,
-    );
-    if (!outputSubrect.contains(point)) {
-      return false;
-    }
-
-    final normX =
-        (point.dx - outputSubrect.left) /
-        outputSubrect.width.clamp(1, double.infinity);
-    final normY =
-        (point.dy - outputSubrect.top) /
         outputSubrect.height.clamp(1, double.infinity);
     final sourceX = inputSubrect.left + normX * inputSubrect.width;
     final sourceY = inputSubrect.top + normY * inputSubrect.height;
@@ -258,6 +256,8 @@ class _GameContainerState extends State<GameContainer>
               size: _lastSize,
               points: _controller.points,
               centerPoint: bodyCenter,
+              config: _config,
+              swayOffset: _swayOffset,
             ).timeout(const Duration(milliseconds: 400));
           } catch (_) {
             cutoutResult = null;

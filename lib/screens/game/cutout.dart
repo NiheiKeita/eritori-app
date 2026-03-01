@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'game_assets.dart';
 import 'geometry.dart';
+import 'level_config.dart';
 
 class CutoutResult {
   const CutoutResult({required this.bytes, required this.size});
@@ -117,6 +118,8 @@ Future<CutoutResult?> createCutout({
   required Size size,
   required List<Offset> points,
   required Offset centerPoint,
+  required LevelConfig config,
+  required Offset swayOffset,
 }) async {
   if (points.length < 3) {
     return null;
@@ -138,10 +141,15 @@ Future<CutoutResult?> createCutout({
     canvas.translate(-bounds.left, -bounds.top);
   }
 
+  final frillRect = frillImageRect(
+    size: size,
+    config: config,
+    swayOffset: swayOffset,
+  );
   final boxFit = applyBoxFit(
-    gameBackgroundFit,
+    gameFrillFit,
     Size(image.width.toDouble(), image.height.toDouble()),
-    size,
+    frillRect.size,
   );
   final fittedSource = boxFit.source;
   final fittedDestination = boxFit.destination;
@@ -149,10 +157,7 @@ Future<CutoutResult?> createCutout({
     fittedSource,
     Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
   );
-  final outputSubrect = Alignment.center.inscribe(
-    fittedDestination,
-    Rect.fromLTWH(0, 0, size.width, size.height),
-  );
+  final outputSubrect = Alignment.center.inscribe(fittedDestination, frillRect);
 
   final clipPath = Path();
   if (isCenterInside) {
