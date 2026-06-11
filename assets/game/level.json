@@ -1,0 +1,85 @@
+{
+  "levels": [
+    {
+      "levelId": 1,
+      "closeThresholdFactor": 0.08,
+      "lizardBody": {
+        "center": { "x": 0.5, "y": 0.55 },
+        "radiusFactor": 0.12
+      },
+      "frillCircle": {
+        "center": { "x": 0.5, "y": 0.52 },
+        "radiusFactor": 0.22
+      },
+      "shadowEllipse": {
+        "center": { "x": 0.5, "y": 0.72 },
+        "radiusXFactor": 0.22,
+        "radiusYFactor": 0.05
+      },
+      "ngCircles": [],
+      "ngRects": [],
+      "swayAmplitudeFactor": 0.0,
+      "minPoints": 6,
+      "minPathLengthFactor": 0.2,
+      "minAreaFactor": 0.001,
+      "minIntersectionGap": 4,
+      "faceScale": 1.2,
+      "frillDisplayScale": 3.1,
+      "faceOffset": { "x": 0.0, "y": 0.0 }
+    },
+    {
+      "levelId": 2,
+      "closeThresholdFactor": 0.08,
+      "lizardBody": {
+        "center": { "x": 0.5, "y": 0.55 },
+        "radiusFactor": 0.12
+      },
+      "frillCircle": {
+        "center": { "x": 0.5, "y": 0.52 },
+        "radiusFactor": 0.22
+      },
+      "shadowEllipse": {
+        "center": { "x": 0.5, "y": 0.72 },
+        "radiusXFactor": 0.22,
+        "radiusYFactor": 0.05
+      },
+      "ngCircles": [],
+      "ngRects": [],
+      "swayAmplitudeFactor": 0.0,
+      "minPoints": 6,
+      "minPathLengthFactor": 0.2,
+      "minAreaFactor": 0.001,
+      "minIntersectionGap": 4,
+      "faceScale": 1.2,
+      "frillDisplayScale": 1.1,
+      "faceOffset": { "x": 0.0, "y": 0.0 }
+    },
+    {
+      "levelId": 3,
+      "closeThresholdFactor": 0.08,
+      "lizardBody": {
+        "center": { "x": 0.5, "y": 0.55 },
+        "radiusFactor": 0.12
+      },
+      "frillCircle": {
+        "center": { "x": 0.5, "y": 0.52 },
+        "radiusFactor": 0.22
+      },
+      "shadowEllipse": {
+        "center": { "x": 0.5, "y": 0.72 },
+        "radiusXFactor": 0.22,
+        "radiusYFactor": 0.05
+      },
+      "ngCircles": [],
+      "ngRects": [],
+      "swayAmplitudeFactor": 0.05,
+      "minPoints": 6,
+      "minPathLengthFactor": 0.2,
+      "minAreaFactor": 0.001,
+      "minIntersectionGap": 4,
+      "faceScale": 1.2,
+      "frillDisplayScale": 1.1,
+      "faceOffset": { "x": 0.0, "y": 0.0 }
+    }
+  ]
+}

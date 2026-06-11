@@ -10,17 +10,20 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/',
       name: 'top',
-      builder: (context, state) => const TopScreen(),
+      pageBuilder: (context, state) =>
+          NoTransitionPage(key: state.pageKey, child: const TopScreen()),
     ),
     GoRoute(
       path: '/second',
       name: 'second',
-      builder: (context, state) => const SecondScreen(),
+      pageBuilder: (context, state) =>
+          NoTransitionPage(key: state.pageKey, child: const SecondScreen()),
     ),
     GoRoute(
       path: '/counter',
       name: 'counter',
-      builder: (context, state) => const CounterContainer(),
+      pageBuilder: (context, state) =>
+          NoTransitionPage(key: state.pageKey, child: const CounterContainer()),
     ),
   ],
 );
