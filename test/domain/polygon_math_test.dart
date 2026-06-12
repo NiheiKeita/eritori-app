@@ -199,6 +199,58 @@ void main() {
     });
   });
 
+  group('findProximityClosure', () {
+    // 大きめの円状の点列（始点 (0,0) に終点が近づいて閉じる）。
+    final circle = const [
+      Offset(0, 0),
+      Offset(40, 0),
+      Offset(40, 40),
+      Offset(0, 40),
+      Offset(-2, 2), // 終点が始点(0,0)の近く（距離≈2.8）
+    ];
+
+    test('closes when the end returns near the start', () {
+      final hit = findProximityClosure(
+        circle,
+        proximity: 6,
+        pathGuard: 50,
+        minLoopArea: 1,
+      );
+      expect(hit, isNotNull);
+      expect(hit!.loop.first, hit.loop.last); // 閉じている
+      expect(hit.segmentIndex, 0); // 始点で閉じる（大きいループ）
+    });
+
+    test('does not close when the end is far from earlier points', () {
+      final openArc = const [
+        Offset(0, 0),
+        Offset(40, 0),
+        Offset(80, 0),
+        Offset(120, 0),
+        Offset(160, 0),
+      ];
+      expect(
+        findProximityClosure(openArc, proximity: 6, pathGuard: 50, minLoopArea: 1),
+        isNull,
+      );
+    });
+
+    test('does not close onto the immediate tail (pathGuard)', () {
+      // 終点付近の点だけが近い直線的な列。pathGuard により末尾には閉じない。
+      final line = const [
+        Offset(0, 0),
+        Offset(10, 0),
+        Offset(20, 0),
+        Offset(30, 0),
+        Offset(31, 1),
+      ];
+      expect(
+        findProximityClosure(line, proximity: 6, pathGuard: 50, minLoopArea: 1),
+        isNull,
+      );
+    });
+  });
+
   group('boundingBox', () {
     test('computes bounds', () {
       final box = boundingBox(const [

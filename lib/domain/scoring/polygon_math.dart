@@ -125,6 +125,49 @@ SelfIntersection? detectSelfIntersection(
   return null;
 }
 
+/// **近接クロージャ**: 最新点 points[n-1] が、十分離れた過去の点に [proximity]（ローカル
+/// 単位）以内まで近づいたら「線が繋がった」とみなして閉ループを返す。
+///
+/// 円を速く描いて、始点に厳密交差せず（線の太さで）触れただけの場合や、終点が始点に
+/// ちょっと届かない場合でも「繋がった瞬間OK」にするためのもの。
+/// - [pathGuard]：終点からの**描画パス長**がこの値以上離れた点のみを閉じ対象にする
+///   （直前の自分の線＝末尾に閉じてしまう誤検出を防ぐ）。
+/// - 面積が [minLoopArea] 未満の退化ループは無視する。
+/// 該当が無ければ null。
+SelfIntersection? findProximityClosure(
+  List<Offset> points, {
+  required double proximity,
+  double pathGuard = 0,
+  double minLoopArea = 0,
+}) {
+  final n = points.length;
+  if (n < 4 || proximity <= 0) return null;
+  final last = points[n - 1];
+
+  // 終点から後ろ向きにパス長を積算し、pathGuard 以上離れた最も終点寄りの index を求める。
+  var acc = 0.0;
+  var guardIdx = -1;
+  for (var i = n - 2; i >= 0; i--) {
+    acc += (points[i + 1] - points[i]).distance;
+    if (acc >= pathGuard) {
+      guardIdx = i;
+      break;
+    }
+  }
+  if (guardIdx < 0) return null; // まだ十分なパス長を描いていない。
+
+  // 始点側（大きいループ）から、終点に近づいた点で閉じる。
+  for (var i = 0; i <= guardIdx; i++) {
+    if ((last - points[i]).distance <= proximity) {
+      final loop = <Offset>[...points.sublist(i, n), points[i]];
+      if (polygonArea(loop) >= minLoopArea) {
+        return SelfIntersection(point: points[i], loop: loop, segmentIndex: i);
+      }
+    }
+  }
+  return null;
+}
+
 /// 2線分 a-b, c-d の最短距離（線の太さ判定用）。
 double segmentDistance(Offset a, Offset b, Offset c, Offset d) {
   if (segmentsIntersect(a, b, c, d)) return 0;

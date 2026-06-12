@@ -68,7 +68,7 @@ class _FailScreenState extends State<FailScreen>
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '顔に触れた / 囲めなかった',
+                  'トカゲや襟の外に触れた / 囲めなかった',
                   style: TextStyle(color: Colors.white60),
                 ),
                 const SizedBox(height: 32),

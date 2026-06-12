@@ -54,6 +54,23 @@ class GameConfig {
   /// 暴発防止のため必ず [minPointDist] より小さくする（直前の自分の線に常時触れないように）。
   static const double intersectionToleranceLocal = minPointDist * 0.7;
 
+  /// 失敗判定（本体接触・透明部分）の線分サンプリング間隔（ローカル単位）。
+  /// 小さいほど高速移動でも本体すり抜けを防げる。
+  static const double failSampleStepLocal = 3.0;
+
+  /// 近接クロージャ: 描画中に終点が始点（過去の点）へこの距離（ローカル）以内まで
+  /// 近づいたら「繋がった」とみなして確定する。線の太さ程度に抑え、ギャップが
+  /// 見えている間は閉じない（緩すぎると未接続でも確定してしまうため）。
+  static const double closeProximityLocal = 8.0;
+
+  /// 指を離した瞬間のクロージャ判定はわずかに甘くする（速く描いて少し届かない時の救済）。
+  /// それでも見えるギャップでは閉じない程度に留める。
+  static const double closeProximityReleaseLocal = 12.0;
+
+  /// 近接クロージャを有効にする最小描画パス長（ローカル）。終点からこの長さ以上離れた
+  /// 過去の点だけを閉じ対象にし、直前の自分の線に閉じる誤検出を防ぐ。
+  static const double closurePathGuardLocal = 64.0;
+
   // --- 保存画像 ---
   /// 切り取り襟・共有用に保存する画像の長辺ピクセル（spec §4）。
   static const int savedImageLongEdge = 512;

@@ -17,7 +17,7 @@ import 'sprite_transform.dart';
 enum GameStatus { loading, ready, drawing, success, fail }
 
 /// 失敗理由。
-enum FailReason { none, touchedFace, notClosed }
+enum FailReason { none, touchedFace, offFrill, notClosed }
 
 /// 確定後の結果（スコア + 切り取り画像）。
 class GameResult {
@@ -59,6 +59,9 @@ class GameController extends ChangeNotifier {
   /// 失敗時、顔に触れたローカル座標（演出用, spec §9.3）。
   Offset? _failLocalPoint;
   Offset? get failLocalPoint => _failLocalPoint;
+
+  /// 直前フレームの指先ローカル座標（線分単位で本体/透明を判定するため保持）。
+  Offset? _lastFingerLocal;
 
   final Stroke _stroke = Stroke();
   Stroke get stroke => _stroke;
@@ -126,7 +129,16 @@ class GameController extends ChangeNotifier {
     if (c == null) return;
     _stroke.clear();
     _status = GameStatus.drawing;
-    _stroke.add(_transform.toLocal(screenPoint));
+    final local = _transform.toLocal(screenPoint);
+    _lastFingerLocal = local;
+    // 開始点が本体／透明なら即失敗（襟の上から始める）。
+    final fail = _segmentFail(c, local, local);
+    if (fail != FailReason.none) {
+      _failLocalPoint = local;
+      _fail(fail);
+      return;
+    }
+    _stroke.add(local);
     notifyListeners();
   }
 
@@ -138,10 +150,14 @@ class GameController extends ChangeNotifier {
     // 回転中は毎フレーム最新の変換でローカル化する。
     final local = _transform.toLocal(screenPoint);
 
-    // 失敗判定（最優先）: 今の指先のみを本体マスクと照合（spec §6.2）。
-    if (c.lizardMask.isOpaqueAt(local.dx, local.dy)) {
+    // 失敗判定（最優先）: 前フレーム指先→今の指先の「線分全体」を照合する。
+    // 点だけだと超高速時に本体をすり抜けるため、線分をサンプリングして
+    // 本体接触（touchedFace）／襟の透明部分（offFrill）を捉える。
+    final fail = _segmentFail(c, _lastFingerLocal ?? local, local);
+    _lastFingerLocal = local;
+    if (fail != FailReason.none) {
       _failLocalPoint = local;
-      _fail(FailReason.touchedFace);
+      _fail(fail);
       return;
     }
 
@@ -152,34 +168,80 @@ class GameController extends ChangeNotifier {
       _stroke.add(local);
     }
 
-    // 自己交差判定: 最小点数たまってから、最新線分が過去線分と厳密交差したら確定。
-    // 退化ループ（面積ほぼゼロ）は detectSelfIntersection 内で除外され確定しない。
-    if (_stroke.length >= GameConfig.minPointsBeforeClose) {
-      final hit = detectSelfIntersection(
-        _stroke.points,
-        minGap: GameConfig.minIntersectionGap,
-        minLoopArea: GameConfig.minLoopArea,
-        tolerance: GameConfig.intersectionToleranceLocal,
-      );
-      if (hit != null) {
-        if (kDebugMode) {
-          // 検証用: 確定時の点数・交差線分・ループ面積（早期確定の有無を確認）。
-          debugPrint(
-            'LOOP confirm: points=${_stroke.length} '
-            'segIndex=${hit.segmentIndex} area=${polygonArea(hit.loop).round()}',
-          );
-        }
-        _confirm(hit.loop);
-        return;
-      }
+    // 「繋がった瞬間OK」: 自己交差または近接クロージャでループが閉じたら確定。
+    final loop = _detectLoop(proximity: GameConfig.closeProximityLocal);
+    if (loop != null) {
+      _confirm(loop);
+      return;
     }
 
     notifyListeners();
   }
 
+  /// 線分 [from]→[to] を細かくサンプリングし、本体接触／襟の透明部分を判定する。
+  /// pan イベント間隔に依存せず、超高速の指でも本体すり抜けを防ぐ。
+  /// 本体に触れたら [FailReason.touchedFace]、襟(不透明)以外＝透明に触れたら
+  /// [FailReason.offFrill]。どちらでもなければ [FailReason.none]。
+  FailReason _segmentFail(SpriteComposite c, Offset from, Offset to) {
+    final dist = (to - from).distance;
+    final steps = math.max(1, (dist / GameConfig.failSampleStepLocal).ceil());
+    for (var s = 0; s <= steps; s++) {
+      final p = Offset.lerp(from, to, s / steps)!;
+      if (c.lizardMask.isOpaqueAt(p.dx, p.dy)) return FailReason.touchedFace;
+      if (!c.eriMask.isOpaqueAt(p.dx, p.dy)) return FailReason.offFrill;
+    }
+    return FailReason.none;
+  }
+
+  /// 閉ループを検出する（自己交差 → 近接クロージャの順）。無ければ null。
+  /// [proximity] は近接クロージャの許容距離（離した瞬間はやや甘くする）。
+  List<Offset>? _detectLoop({required double proximity}) {
+    if (_stroke.length < GameConfig.minPointsBeforeClose) return null;
+
+    // 自己交差（厳密交差＋線の太さの許容距離）。退化ループは内部で除外。
+    final hit = detectSelfIntersection(
+      _stroke.points,
+      minGap: GameConfig.minIntersectionGap,
+      minLoopArea: GameConfig.minLoopArea,
+      tolerance: GameConfig.intersectionToleranceLocal,
+    );
+    if (hit != null) {
+      _logLoop('cross', hit);
+      return hit.loop;
+    }
+
+    // 近接クロージャ（始点へ戻って繋がった）。
+    final close = findProximityClosure(
+      _stroke.points,
+      proximity: proximity,
+      pathGuard: GameConfig.closurePathGuardLocal,
+      minLoopArea: GameConfig.minLoopArea,
+    );
+    if (close != null) {
+      _logLoop('proximity', close);
+      return close.loop;
+    }
+    return null;
+  }
+
+  void _logLoop(String kind, SelfIntersection hit) {
+    if (kDebugMode) {
+      debugPrint(
+        'LOOP confirm($kind): points=${_stroke.length} '
+        'segIndex=${hit.segmentIndex} area=${polygonArea(hit.loop).round()}',
+      );
+    }
+  }
+
   void onPanEnd() {
     if (_status != GameStatus.drawing) return;
-    // 交差せず指を離した → 不成立（spec §6.2）。
+    // 離した瞬間にもクロージャ判定（円を速く描いて少し届かない場合の救済, やや甘め）。
+    final loop = _detectLoop(proximity: GameConfig.closeProximityReleaseLocal);
+    if (loop != null) {
+      _confirm(loop);
+      return;
+    }
+    // それでも閉じていなければ不成立（spec §6.2）。
     _fail(FailReason.notClosed);
   }
 
@@ -229,6 +291,7 @@ class GameController extends ChangeNotifier {
     _status = _composite == null ? GameStatus.loading : GameStatus.ready;
     _failReason = FailReason.none;
     _failLocalPoint = null;
+    _lastFingerLocal = null;
     _result = null;
     notifyListeners();
   }
