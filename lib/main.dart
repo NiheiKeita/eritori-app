@@ -2,50 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'app_router.dart';
-import 'app_scope.dart';
-import 'screens/game/level_config.dart';
-import 'screens/level_select/level_select_controller.dart';
-import 'screens/settings/settings_controller.dart';
-import 'storage/prefs_repository.dart';
+import 'app/app.dart';
+import 'app/app_scope.dart';
+import 'app/router.dart';
+import 'data/repositories/eri_repository.dart';
+import 'data/repositories/progress_repository.dart';
+import 'data/storage/local_storage.dart';
+import 'state/progress_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // 縦持ち専用（spec §1 / §9.6）。
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   final prefs = await SharedPreferences.getInstance();
-  final prefsRepository = SharedPrefsRepository(prefs);
-  await LevelConfig.loadFromAsset();
-  final levelSelectController = LevelSelectController(prefsRepository);
-  final settingsController = SettingsController(prefsRepository);
-  await levelSelectController.load();
-  await settingsController.load();
+  final progressRepository = SharedPrefsProgressRepository(prefs);
+  final progressController = ProgressController(progressRepository);
+  final eriRepository = EriRepository(LocalStorage());
+
+  await progressController.load();
+  await eriRepository.load();
+
+  // 初回はチュートリアルから（spec §5）。
+  final seenTutorial = await progressRepository.getHasSeenTutorial();
+  final initialLocation = seenTutorial ? '/' : '/tutorial';
 
   runApp(
     AppScope(
-      prefsRepository: prefsRepository,
-      levelSelectController: levelSelectController,
-      settingsController: settingsController,
-      child: MyApp(appRouter: AppRouter()),
+      progressRepository: progressRepository,
+      progressController: progressController,
+      eriRepository: eriRepository,
+      child: EritoriApp(
+        router: AppRouter(initialLocation: initialLocation),
+      ),
     ),
   );
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key, required this.appRouter});
-
-  final AppRouter appRouter;
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'えりとり',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1F6F75)),
-        scaffoldBackgroundColor: const Color(0xFFF7F3E8),
-        useMaterial3: true,
-      ),
-      routerConfig: appRouter.createRouter(),
-    );
-  }
 }
