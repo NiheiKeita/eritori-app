@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/app_scope.dart';
 import '../../data/repositories/eri_repository.dart';
 import '../../domain/models/eri.dart';
-import '../../shared/widgets/app_bottom_nav.dart';
 import '../../shared/widgets/eri_tile.dart';
 
-/// 宝箱（spec §8.5）。グリッド表示・容量枠・「ボードへ移動」。
+/// 宝箱（spec §8.5）。エリボード上の宝箱から開くサブ画面。グリッド表示・「ボードへ移動」。
 class ChestScreen extends StatelessWidget {
   const ChestScreen({super.key});
 
@@ -14,8 +14,14 @@ class ChestScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = AppScope.of(context).eriRepository;
     return Scaffold(
-      appBar: AppBar(title: const Text('宝箱')),
-      bottomNavigationBar: const AppBottomNav(current: AppTab.chest),
+      appBar: AppBar(
+        title: const Text('宝箱'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/board'),
+        ),
+      ),
       body: AnimatedBuilder(
         animation: repo,
         builder: (context, _) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/app_scope.dart';
 import '../../data/repositories/eri_repository.dart';
@@ -46,7 +47,9 @@ class _BoardScreenState extends State<BoardScreen> {
           return Column(
             children: [
               Expanded(
-                child: RepaintBoundary(
+                child: Stack(
+                  children: [
+                    RepaintBoundary(
                   key: _boardKey,
                   child: LayoutBuilder(
                     builder: (context, constraints) {
@@ -95,6 +98,15 @@ class _BoardScreenState extends State<BoardScreen> {
                       );
                     },
                   ),
+                    ),
+                    // 宝箱オブジェクト（タップで宝箱画面へ）。共有画像に写さないため
+                    // RepaintBoundary の外に重ねる。
+                    Positioned(
+                      right: 16,
+                      bottom: 16,
+                      child: _ChestButton(onTap: () => context.push('/chest')),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -246,6 +258,35 @@ class _BoardPieceState extends State<_BoardPiece> {
           child: provider == null
               ? const ColoredBox(color: Colors.white10)
               : Image(image: provider, fit: BoxFit.contain),
+        ),
+      ),
+    );
+  }
+}
+
+/// ボード上に置く宝箱オブジェクト。タップで宝箱画面へ遷移する。
+class _ChestButton extends StatelessWidget {
+  const _ChestButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          color: const Color(0xFF3A2A12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE7B24B), width: 2),
+          boxShadow: const [
+            BoxShadow(color: Color(0x66E7B24B), blurRadius: 12),
+          ],
+        ),
+        child: const Center(
+          child: Text('🧰', style: TextStyle(fontSize: 30)),
         ),
       ),
     );

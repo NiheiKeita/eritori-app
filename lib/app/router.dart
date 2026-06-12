@@ -5,6 +5,7 @@ import '../features/chest/chest_screen.dart';
 import '../features/fail/fail_screen.dart';
 import '../features/game/game_container.dart';
 import '../features/home/home_screen.dart';
+import '../features/menu/menu_screen.dart';
 import '../features/organize/organize_args.dart';
 import '../features/organize/organize_screen.dart';
 import '../features/result/result_args.dart';
@@ -43,6 +44,10 @@ class AppRouter {
         GoRoute(
           path: '/chest',
           builder: (context, state) => const ChestScreen(),
+        ),
+        GoRoute(
+          path: '/menu',
+          builder: (context, state) => const MenuScreen(),
         ),
         GoRoute(
           path: '/board',
